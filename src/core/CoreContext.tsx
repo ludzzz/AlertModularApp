@@ -1,5 +1,23 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { CoreContextType, ModuleDefinition } from '../types';
+import CoreModule from './CoreModule';
+
+// Define the core module definition outside of ModuleLoader
+export const CoreModuleDefinition: ModuleDefinition = {
+  id: 'core',
+  name: 'Dashboard',
+  description: 'Core dashboard module',
+  menuItems: [
+    {
+      id: 'core-dashboard',
+      label: 'Dashboard',
+      path: '/',
+      icon: '📊'
+    }
+  ],
+  component: CoreModule,
+  alertsEnabled: true
+};
 
 // Create the core context with default values
 const CoreContext = createContext<CoreContextType>({

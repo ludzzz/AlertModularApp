@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { useCoreContext } from './CoreContext';
+import { useCoreContext, CoreModuleDefinition } from './CoreContext';
 import ModuleErrorBoundary from '../components/ModuleErrorBoundary';
 import { useAlertContext } from './AlertContext';
 import { AlertSeverity } from '../types';
@@ -64,15 +64,8 @@ const ModuleLoader: React.FC = () => {
   }, [registerModule, addAlert]);
   
   useEffect(() => {
-    // Register the core module first
-    loadModule({
-      id: 'core',
-      name: 'Dashboard',
-      description: 'Core dashboard module',
-      menuItems: [],
-      component: CoreModule,
-      alertsEnabled: true
-    });
+    // Register the core module first using the definition from CoreContext
+    loadModule(CoreModuleDefinition);
     
     // Register other modules
     loadModule(NetworkModule);

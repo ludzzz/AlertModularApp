@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import TabBar from './TabBar';
@@ -36,10 +36,20 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { setCurrentModuleId } = useCoreContext();
+  const { setCurrentModuleId, getModuleById } = useCoreContext();
+  const navigate = useNavigate();
   
   const handleTabChange = (moduleId: string) => {
     setCurrentModuleId(moduleId);
+    
+    // Get the default route for this module and navigate to it
+    const module = getModuleById(moduleId);
+    
+    if (module && module.menuItems && module.menuItems.length > 0) {
+      // Get the first menu item's path
+      const defaultPath = module.menuItems[0].path;
+      navigate(defaultPath);
+    }
   };
   
   return (

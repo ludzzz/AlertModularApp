@@ -11,7 +11,22 @@ const mockAddAlert = jest.fn();
 jest.mock('../core/CoreContext', () => ({
   useCoreContext: () => ({
     registerModule: mockRegisterModule
-  })
+  }),
+  CoreModuleDefinition: {
+    id: 'core',
+    name: 'Dashboard',
+    description: 'Core dashboard module',
+    menuItems: [
+      {
+        id: 'core-dashboard',
+        label: 'Dashboard',
+        path: '/',
+        icon: '📊'
+      }
+    ],
+    component: () => null,
+    alertsEnabled: true
+  }
 }));
 
 // Mock AlertContext
