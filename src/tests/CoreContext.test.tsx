@@ -21,9 +21,18 @@ describe('CoreContext', () => {
     expect(CoreModuleDefinition).toHaveProperty('name', 'Dashboard');
     expect(CoreModuleDefinition).toHaveProperty('description', 'Core dashboard module');
     expect(CoreModuleDefinition).toHaveProperty('menuItems');
-    expect(CoreModuleDefinition.menuItems).toHaveLength(1);
-    expect(CoreModuleDefinition.menuItems[0]).toHaveProperty('id', 'core-dashboard');
-    expect(CoreModuleDefinition.menuItems[0]).toHaveProperty('path', '/');
+    expect(CoreModuleDefinition.menuItems).toHaveLength(2); // Now we have 2 menu items
+    
+    // Test dashboard menu item
+    const dashboardItem = CoreModuleDefinition.menuItems.find(item => item.id === 'core-dashboard');
+    expect(dashboardItem).toBeDefined();
+    expect(dashboardItem).toHaveProperty('path', '/');
+    
+    // Test settings menu item
+    const settingsItem = CoreModuleDefinition.menuItems.find(item => item.id === 'core-settings');
+    expect(settingsItem).toBeDefined();
+    expect(settingsItem).toHaveProperty('path', '/settings');
+    
     expect(CoreModuleDefinition).toHaveProperty('component');
     expect(CoreModuleDefinition).toHaveProperty('alertsEnabled', true);
   });

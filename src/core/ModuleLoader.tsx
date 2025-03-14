@@ -81,10 +81,16 @@ const ModuleLoader: React.FC = () => {
   
   return (
     <Routes>
-      {/* Core route */}
+      {/* Core routes */}
       <Route path="/" element={
         <ModuleErrorBoundary moduleId="core" moduleName="Dashboard">
           <CoreModule />
+        </ModuleErrorBoundary>
+      } />
+      
+      <Route path="/settings" element={
+        <ModuleErrorBoundary moduleId="core" moduleName="Settings">
+          <CoreModule initialTab="settings" />
         </ModuleErrorBoundary>
       } />
       

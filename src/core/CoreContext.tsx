@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { CoreContextType, ModuleDefinition } from '../types';
+import { CoreContextType, ModuleDefinition, Connector } from '../types';
 import CoreModule from './CoreModule';
 
 // Define the core module definition outside of ModuleLoader
@@ -13,6 +13,12 @@ export const CoreModuleDefinition: ModuleDefinition = {
       label: 'Dashboard',
       path: '/',
       icon: '📊'
+    },
+    {
+      id: 'core-settings',
+      label: 'Settings',
+      path: '/settings',
+      icon: '⚙️'
     }
   ],
   component: CoreModule,
@@ -28,6 +34,12 @@ const CoreContext = createContext<CoreContextType>({
   setCurrentModuleId: () => {},
   getModuleById: () => undefined,
   toggleModuleAlerts: () => {},
+  // Connector-related properties
+  connectors: [],
+  registerConnector: () => {},
+  unregisterConnector: () => {},
+  getConnectorsByType: () => [],
+  toggleConnector: () => {},
 });
 
 // Custom hook for using the CoreContext
@@ -80,6 +92,36 @@ export const CoreContextProvider: React.FC<CoreContextProviderProps> = ({ childr
     }
   }, [modules, currentModuleId]);
 
+  // Add connector state
+  const [connectors, setConnectors] = useState<Connector[]>([]);
+
+  // Register a connector
+  const registerConnector = (connector: Connector) => {
+    setConnectors(prevConnectors => {
+      if (prevConnectors.some(c => c.id === connector.id)) {
+        return prevConnectors;
+      }
+      return [...prevConnectors, connector];
+    });
+  };
+
+  // Unregister a connector
+  const unregisterConnector = (connectorId: string) => {
+    setConnectors(prevConnectors => prevConnectors.filter(c => c.id !== connectorId));
+  };
+
+  // Get connectors by type
+  const getConnectorsByType = (type: string) => {
+    return connectors.filter(c => c.type === type);
+  };
+
+  // Toggle connector enabled state
+  const toggleConnector = (connectorId: string, enabled: boolean) => {
+    setConnectors(prevConnectors => 
+      prevConnectors.map(c => c.id === connectorId ? { ...c, enabled } : c)
+    );
+  };
+
   const value: CoreContextType = {
     modules,
     registerModule,
@@ -88,6 +130,12 @@ export const CoreContextProvider: React.FC<CoreContextProviderProps> = ({ childr
     setCurrentModuleId,
     getModuleById,
     toggleModuleAlerts,
+    // Connector-related properties
+    connectors,
+    registerConnector,
+    unregisterConnector,
+    getConnectorsByType,
+    toggleConnector,
   };
 
   return <CoreContext.Provider value={value}>{children}</CoreContext.Provider>;

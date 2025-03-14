@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAlertContext } from '../../core/AlertContext';
+import { useConnectorAlerts } from '../../hooks/useConnectorAlerts';
+import { useCoreContext } from '../../core/CoreContext'; 
 import { 
   Alert, 
   AlertSeverity, 
   AlertCategory, 
   AlertStatus,
-  PrometheusAlert
+  PrometheusAlert,
+  OpsgenieAlert
 } from '../../types';
 
 const Container = styled.div`
@@ -141,6 +144,43 @@ const EmptyState = styled.div`
   background-color: white;
   border-radius: 8px;
   color: #95a5a6;
+`;
+
+const ConnectorStatus = styled.div<{ status: 'error' | 'loading' | 'connected' | 'not-configured' }>`
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  background-color: ${({ status }) => {
+    switch (status) {
+      case 'error':
+        return '#ffebee';
+      case 'loading':
+        return '#e3f2fd';
+      case 'connected':
+        return '#e8f5e9';
+      case 'not-configured':
+        return '#fff8e1';
+      default:
+        return '#f5f5f5';
+    }
+  }};
+  color: ${({ status }) => {
+    switch (status) {
+      case 'error':
+        return '#b71c1c';
+      case 'loading':
+        return '#0d47a1';
+      case 'connected':
+        return '#1b5e20';
+      case 'not-configured':
+        return '#ff6f00';
+      default:
+        return '#212121';
+    }
+  }};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const AddAlertForm = styled.div`
@@ -306,11 +346,40 @@ const NetworkAlerts: React.FC = () => {
     removeAlert 
   } = useAlertContext();
   
+  const { connectors } = useCoreContext();
+  
+  // Use our custom hook to fetch connector alerts
+  const { 
+    isLoading, 
+    error, 
+    refreshAlerts 
+  } = useConnectorAlerts({
+    moduleId: 'network',
+    teamId: 'network-team',
+    refreshInterval: 30000 // 30 seconds
+  });
+  
   const networkAlerts = alerts.filter(alert => alert.moduleId === 'network');
+  
+  // State for connector status
+  const [connectorStatus, setConnectorStatus] = useState<'error' | 'loading' | 'connected' | 'not-configured'>('loading');
+  
+  // Check connector status when connectors or loading state changes
+  useEffect(() => {
+    if (error) {
+      setConnectorStatus('error');
+    } else if (isLoading) {
+      setConnectorStatus('loading');
+    } else if (connectors.some(c => c.enabled && c.type === 'opsgenie')) {
+      setConnectorStatus('connected');
+    } else {
+      setConnectorStatus('not-configured');
+    }
+  }, [connectors, isLoading, error]);
   
   // Demo form state
   const [showDemoForm, setShowDemoForm] = useState(false);
-  const [alertType, setAlertType] = useState<'internal' | 'prometheus'>('internal');
+  const [alertType, setAlertType] = useState<'internal' | 'prometheus' | 'opsgenie'>('internal');
   
   // Form state for internal alert
   const [title, setTitle] = useState('');
@@ -325,6 +394,12 @@ const NetworkAlerts: React.FC = () => {
   const [prometheusSeverity, setPrometheusSeverity] = useState('warning');
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
+  
+  // Form state for Opsgenie alert
+  const [opsgenieTitle, setOpsgenieTitle] = useState('');
+  const [opsgenieMessage, setOpsgenieMessage] = useState('');
+  const [opsgeniePriority, setOpsgeniePriority] = useState<'P1' | 'P2' | 'P3' | 'P4' | 'P5'>('P2');
+  const [opsgenieTags, setOpsgenieTags] = useState('network,router,team:network-team');
   
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString();
@@ -380,13 +455,65 @@ const NetworkAlerts: React.FC = () => {
     setShowDemoForm(false);
   };
   
+  const handleAddOpsgenieAlert = () => {
+    const opsgenieAlert: OpsgenieAlert = {
+      source: 'opsgenie',
+      message: opsgenieTitle,
+      description: opsgenieMessage,
+      priority: opsgeniePriority,
+      createdAt: new Date().toISOString(),
+      tags: opsgenieTags.split(',').map(tag => tag.trim()),
+      details: {
+        teamId: 'network-team',
+        responders: 'Network Team',
+        source: 'AlertModular'
+      },
+      id: `opsgenie-${Date.now()}`,
+      status: 'open'
+    };
+    
+    addThirdPartyAlert(opsgenieAlert, 'network');
+    
+    // Reset form
+    setOpsgenieTitle('');
+    setOpsgenieMessage('');
+    setOpsgeniePriority('P2');
+    setOpsgenieTags('network,router,team:network-team');
+    setShowDemoForm(false);
+  };
+  
   return (
     <Container>
       <Header>Network Alerts</Header>
       
+      {/* Connector Status Banner */}
+      <ConnectorStatus status={connectorStatus}>
+        {connectorStatus === 'error' && (
+          <>
+            <span>🔴 Error connecting to Opsgenie. Alerts may be missing.</span>
+            <Button onClick={refreshAlerts}>Retry Connection</Button>
+          </>
+        )}
+        {connectorStatus === 'loading' && (
+          <span>⏳ Connecting to Opsgenie...</span>
+        )}
+        {connectorStatus === 'connected' && (
+          <span>✅ Connected to Opsgenie - retrieving team alerts.</span>
+        )}
+        {connectorStatus === 'not-configured' && (
+          <>
+            <span>⚠️ Opsgenie connector not configured. Please set up in Settings.</span>
+            <Button onClick={() => window.location.href = '/settings'}>Go to Settings</Button>
+          </>
+        )}
+      </ConnectorStatus>
+      
       <ButtonGroup>
         <Button onClick={() => setShowDemoForm(!showDemoForm)}>
           {showDemoForm ? 'Hide Demo Form' : 'Add Demo Alert'}
+        </Button>
+        <Button onClick={refreshAlerts}>
+          Refresh Alerts
         </Button>
       </ButtonGroup>
       
@@ -398,10 +525,11 @@ const NetworkAlerts: React.FC = () => {
             <Label>Alert Type</Label>
             <Select 
               value={alertType} 
-              onChange={(e) => setAlertType(e.target.value as 'internal' | 'prometheus')}
+              onChange={(e) => setAlertType(e.target.value as 'internal' | 'prometheus' | 'opsgenie')}
             >
               <option value="internal">Internal Alert</option>
               <option value="prometheus">Prometheus Alert</option>
+              <option value="opsgenie">Opsgenie Alert</option>
             </Select>
           </FormGroup>
           
@@ -455,7 +583,7 @@ const NetworkAlerts: React.FC = () => {
               
               <Button onClick={handleAddInternalAlert}>Add Internal Alert</Button>
             </>
-          ) : (
+          ) : alertType === 'prometheus' ? (
             <>
               <FormGroup>
                 <Label>Alert Name</Label>
@@ -521,6 +649,54 @@ const NetworkAlerts: React.FC = () => {
               </FormGroup>
               
               <Button onClick={handleAddPrometheusAlert}>Add Prometheus Alert</Button>
+            </>
+          ) : (
+            <>
+              <FormGroup>
+                <Label>Title</Label>
+                <Input 
+                  type="text" 
+                  value={opsgenieTitle} 
+                  onChange={(e) => setOpsgenieTitle(e.target.value)}
+                  placeholder="Alert title"
+                />
+              </FormGroup>
+              
+              <FormGroup>
+                <Label>Message</Label>
+                <Input 
+                  type="text" 
+                  value={opsgenieMessage} 
+                  onChange={(e) => setOpsgenieMessage(e.target.value)}
+                  placeholder="Detailed description"
+                />
+              </FormGroup>
+              
+              <FormGroup>
+                <Label>Priority</Label>
+                <Select 
+                  value={opsgeniePriority} 
+                  onChange={(e) => setOpsgeniePriority(e.target.value as 'P1' | 'P2' | 'P3' | 'P4' | 'P5')}
+                >
+                  <option value="P1">P1 (Critical)</option>
+                  <option value="P2">P2 (High)</option>
+                  <option value="P3">P3 (Moderate)</option>
+                  <option value="P4">P4 (Low)</option>
+                  <option value="P5">P5 (Informational)</option>
+                </Select>
+              </FormGroup>
+              
+              <FormGroup>
+                <Label>Tags (comma separated)</Label>
+                <Input 
+                  type="text" 
+                  value={opsgenieTags} 
+                  onChange={(e) => setOpsgenieTags(e.target.value)}
+                  placeholder="network,router,team:network-team"
+                />
+              </FormGroup>
+              
+              <Button onClick={handleAddOpsgenieAlert}>Add Opsgenie Alert</Button>
             </>
           )}
         </AddAlertForm>

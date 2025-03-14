@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useCoreContext } from './CoreContext';
 import { useAlertContext } from './AlertContext';
 import { Alert, AlertSeverity } from '../types';
+import ConnectorSettings from '../core/settings/ConnectorSettings';
 
 const CoreModuleContainer = styled.div`
   padding: 20px;
@@ -138,9 +139,27 @@ const SeverityIndicator = styled.div<{ severity: AlertSeverity }>`
   display: inline-block;
 `;
 
-const CoreModule: React.FC = () => {
-  const { modules } = useCoreContext();
+// Add styles for the tab navigation
+
+
+const TabContent = styled.div`
+  margin-top: 20px;
+`;
+
+// Define the interface for component props
+interface CoreModuleProps {
+  initialTab?: 'dashboard' | 'settings';
+}
+
+const CoreModule: React.FC<CoreModuleProps> = ({ initialTab = 'dashboard' }) => {
+  const { modules, registerConnector } = useCoreContext();
   const { alerts, acknowledgeAlert } = useAlertContext();
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'settings'>(initialTab);
+  
+  // Set the active tab when initialTab changes
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
   
   // Group alerts by module
   const alertsByModule = modules.reduce((acc, module) => {
@@ -167,78 +186,108 @@ const CoreModule: React.FC = () => {
     return new Date(date).toLocaleString();
   };
   
+  // Handle connector save
+  const handleSaveConnector = (connector: any) => {
+    registerConnector(connector);
+  };
+  
   return (
     <CoreModuleContainer>
-      <ModuleTitle>Alert Dashboard</ModuleTitle>
+      <ModuleTitle>
+        {activeTab === 'dashboard' ? 'Alert Dashboard' : 'Settings'}
+      </ModuleTitle>
       
-      <AlertSummaryContainer>
-        {modules.map(module => (
-          <AlertSummaryCard key={module.id}>
-            <ModuleName>{module.name}</ModuleName>
-            <AlertStats>
-              <AlertCount severity="total">
-                <CountNumber>{alertCountsBySeverity[module.id]?.total || 0}</CountNumber>
-                <CountLabel>Total</CountLabel>
-              </AlertCount>
-              <AlertCount severity={AlertSeverity.CRITICAL}>
-                <CountNumber>{alertCountsBySeverity[module.id]?.[AlertSeverity.CRITICAL] || 0}</CountNumber>
-                <CountLabel>Critical</CountLabel>
-              </AlertCount>
-              <AlertCount severity={AlertSeverity.ERROR}>
-                <CountNumber>{alertCountsBySeverity[module.id]?.[AlertSeverity.ERROR] || 0}</CountNumber>
-                <CountLabel>Error</CountLabel>
-              </AlertCount>
-            </AlertStats>
-          </AlertSummaryCard>
-        ))}
-      </AlertSummaryContainer>
+      {/* <TabContainer>
+        <TabButton 
+          active={activeTab === 'dashboard'} 
+          onClick={() => setActiveTab('dashboard')}
+        >
+          Dashboard
+        </TabButton>
+        <TabButton 
+          active={activeTab === 'settings'} 
+          onClick={() => setActiveTab('settings')}
+        >
+          Settings
+        </TabButton>
+      </TabContainer> */}
       
-      <AllAlertsContainer>
-        <h3>All Alerts</h3>
-        <AlertTable>
-          <TableHeader>
-            <TableRow>
-              <TableHeaderCell>Severity</TableHeaderCell>
-              <TableHeaderCell>Module</TableHeaderCell>
-              <TableHeaderCell>Title</TableHeaderCell>
-              <TableHeaderCell>Message</TableHeaderCell>
-              <TableHeaderCell>Time</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
-            </TableRow>
-          </TableHeader>
-          <tbody>
-            {alerts.length > 0 ? (
-              alerts.map(alert => (
-                <TableRow key={alert.id} severity={alert.severity} acknowledged={alert.acknowledged}>
-                  <TableCell>
-                    <SeverityIndicator severity={alert.severity} />
-                    {alert.severity}
-                  </TableCell>
-                  <TableCell>{alert.moduleId}</TableCell>
-                  <TableCell>{alert.title}</TableCell>
-                  <TableCell>{alert.message}</TableCell>
-                  <TableCell>{formatDate(alert.timestamp)}</TableCell>
-                  <TableCell>
-                    {alert.acknowledged ? (
-                      'Acknowledged'
-                    ) : (
-                      <button onClick={() => acknowledgeAlert(alert.id)}>
-                        Acknowledge
-                      </button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} style={{ textAlign: 'center' }}>
-                  No alerts to display
-                </TableCell>
-              </TableRow>
-            )}
-          </tbody>
-        </AlertTable>
-      </AllAlertsContainer>
+      <TabContent>
+        {activeTab === 'dashboard' ? (
+          <>
+            <AlertSummaryContainer>
+              {modules.map(module => (
+                <AlertSummaryCard key={module.id}>
+                  <ModuleName>{module.name}</ModuleName>
+                  <AlertStats>
+                    <AlertCount severity="total">
+                      <CountNumber>{alertCountsBySeverity[module.id]?.total || 0}</CountNumber>
+                      <CountLabel>Total</CountLabel>
+                    </AlertCount>
+                    <AlertCount severity={AlertSeverity.CRITICAL}>
+                      <CountNumber>{alertCountsBySeverity[module.id]?.[AlertSeverity.CRITICAL] || 0}</CountNumber>
+                      <CountLabel>Critical</CountLabel>
+                    </AlertCount>
+                    <AlertCount severity={AlertSeverity.ERROR}>
+                      <CountNumber>{alertCountsBySeverity[module.id]?.[AlertSeverity.ERROR] || 0}</CountNumber>
+                      <CountLabel>Error</CountLabel>
+                    </AlertCount>
+                  </AlertStats>
+                </AlertSummaryCard>
+              ))}
+            </AlertSummaryContainer>
+            
+            <AllAlertsContainer>
+              <h3>All Alerts</h3>
+              <AlertTable>
+                <TableHeader>
+                  <TableRow>
+                    <TableHeaderCell>Severity</TableHeaderCell>
+                    <TableHeaderCell>Module</TableHeaderCell>
+                    <TableHeaderCell>Title</TableHeaderCell>
+                    <TableHeaderCell>Message</TableHeaderCell>
+                    <TableHeaderCell>Time</TableHeaderCell>
+                    <TableHeaderCell>Status</TableHeaderCell>
+                  </TableRow>
+                </TableHeader>
+                <tbody>
+                  {alerts.length > 0 ? (
+                    alerts.map(alert => (
+                      <TableRow key={alert.id} severity={alert.severity} acknowledged={alert.acknowledged}>
+                        <TableCell>
+                          <SeverityIndicator severity={alert.severity} />
+                          {alert.severity}
+                        </TableCell>
+                        <TableCell>{alert.moduleId}</TableCell>
+                        <TableCell>{alert.title}</TableCell>
+                        <TableCell>{alert.message}</TableCell>
+                        <TableCell>{formatDate(alert.timestamp)}</TableCell>
+                        <TableCell>
+                          {alert.acknowledged ? (
+                            'Acknowledged'
+                          ) : (
+                            <button onClick={() => acknowledgeAlert(alert.id)}>
+                              Acknowledge
+                            </button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} style={{ textAlign: 'center' }}>
+                        No alerts to display
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </tbody>
+              </AlertTable>
+            </AllAlertsContainer>
+          </>
+        ) : (
+          <ConnectorSettings onSave={handleSaveConnector} />
+        )}
+      </TabContent>
     </CoreModuleContainer>
   );
 };

@@ -7,7 +7,8 @@ import {
   PrometheusAlert,
   NagiosAlert,
   ElasticsearchAlert,
-  CloudwatchAlert
+  CloudwatchAlert,
+  OpsgenieAlert
 } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -280,6 +281,77 @@ export function convertCloudwatchAlert(
 }
 
 /**
+ * Converts an Opsgenie alert to the internal Alert format
+ */
+export function convertOpsgenieAlert(
+  opsgenieAlert: OpsgenieAlert, 
+  options: Partial<AlertConversionOptions> = {}
+): Alert {
+  const opts = { ...defaultOptions, ...options };
+  
+  // Map Opsgenie priority to our severity
+  let severity: AlertSeverity;
+  switch (opsgenieAlert.priority) {
+    case 'P1':
+      severity = AlertSeverity.CRITICAL;
+      break;
+    case 'P2':
+      severity = AlertSeverity.ERROR;
+      break;
+    case 'P3':
+      severity = AlertSeverity.WARNING;
+      break;
+    case 'P4':
+    case 'P5':
+      severity = AlertSeverity.INFO;
+      break;
+    default:
+      severity = opts.defaultSeverity!;
+  }
+
+  // Map status
+  let status: AlertStatus;
+  switch (opsgenieAlert.status) {
+    case 'acknowledged':
+      status = AlertStatus.ACKNOWLEDGED;
+      break;
+    case 'closed':
+      status = AlertStatus.RESOLVED;
+      break;
+    default:
+      status = AlertStatus.ACTIVE;
+  }
+
+  // Convert alert
+  return {
+    id: opts.generateId ? uuidv4() : opsgenieAlert.id,
+    moduleId: opts.targetModuleId,
+    title: opsgenieAlert.message,
+    message: opsgenieAlert.description || opsgenieAlert.message,
+    severity,
+    category: inferCategoryFromOpsgenie(opsgenieAlert),
+    status,
+    timestamp: new Date(opsgenieAlert.createdAt),
+    acknowledged: opsgenieAlert.status === 'acknowledged',
+    source: opsgenieAlert.source,
+    sourceId: opsgenieAlert.id,
+    entity: opsgenieAlert.details?.entity ? {
+      id: opsgenieAlert.details.entity,
+      type: opsgenieAlert.details.entityType || 'unknown',
+      name: opsgenieAlert.details.entityName || opsgenieAlert.details.entity
+    } : undefined,
+    tags: opsgenieAlert.tags,
+    metadata: opts.includeSourceAsMetadata 
+      ? { 
+          original: opsgenieAlert,
+          details: opsgenieAlert.details,
+          updatedAt: opsgenieAlert.updatedAt
+        } 
+      : undefined,
+  };
+}
+
+/**
  * Main conversion function that detects the type of alert and calls the appropriate converter
  */
 export function convertAlert(
@@ -295,6 +367,8 @@ export function convertAlert(
       return convertElasticsearchAlert(thirdPartyAlert as ElasticsearchAlert, options);
     case 'cloudwatch':
       return convertCloudwatchAlert(thirdPartyAlert as CloudwatchAlert, options);
+    case 'opsgenie':
+      return convertOpsgenieAlert(thirdPartyAlert as OpsgenieAlert, options);
     default:
       // Safe to use any here as we're just getting the source for the error message
       const unknownAlert = thirdPartyAlert as any;
@@ -383,5 +457,73 @@ function inferCategoryFromCloudwatch(alert: CloudwatchAlert): AlertCategory {
     return AlertCategory.SECURITY;
   }
 
+  return AlertCategory.SYSTEM;
+}
+
+function inferCategoryFromOpsgenie(alert: OpsgenieAlert): AlertCategory {
+  // Check tags first
+  if (alert.tags) {
+    for (const tag of alert.tags) {
+      const tagLower = tag.toLowerCase();
+      if (tagLower.includes('network')) return AlertCategory.NETWORK;
+      if (tagLower.includes('security')) return AlertCategory.SECURITY;
+      if (tagLower.includes('database') || tagLower.includes('db')) return AlertCategory.DATABASE;
+      if (tagLower.includes('performance')) return AlertCategory.PERFORMANCE;
+      if (tagLower.includes('application') || tagLower.includes('app')) return AlertCategory.APPLICATION;
+    }
+  }
+  
+  // Check the message content
+  const messageLower = alert.message.toLowerCase();
+  const descriptionLower = (alert.description || '').toLowerCase();
+  
+  if (messageLower.includes('network') || 
+      messageLower.includes('switch') || 
+      messageLower.includes('router') ||
+      descriptionLower.includes('network')) {
+    return AlertCategory.NETWORK;
+  }
+  
+  if (messageLower.includes('security') || 
+      messageLower.includes('firewall') ||
+      messageLower.includes('breach') ||
+      messageLower.includes('hack') ||
+      descriptionLower.includes('security')) {
+    return AlertCategory.SECURITY;
+  }
+  
+  if (messageLower.includes('database') || 
+      messageLower.includes('db') ||
+      messageLower.includes('sql') ||
+      descriptionLower.includes('database')) {
+    return AlertCategory.DATABASE;
+  }
+  
+  if (messageLower.includes('cpu') || 
+      messageLower.includes('memory') ||
+      messageLower.includes('disk') ||
+      messageLower.includes('performance') ||
+      messageLower.includes('latency') ||
+      descriptionLower.includes('performance')) {
+    return AlertCategory.PERFORMANCE;
+  }
+  
+  if (messageLower.includes('application') || 
+      messageLower.includes('service') ||
+      messageLower.includes('api') ||
+      descriptionLower.includes('application')) {
+    return AlertCategory.APPLICATION;
+  }
+  
+  // Check details as a last resort
+  if (alert.details) {
+    const detailsStr = JSON.stringify(alert.details).toLowerCase();
+    if (detailsStr.includes('network')) return AlertCategory.NETWORK;
+    if (detailsStr.includes('security')) return AlertCategory.SECURITY;
+    if (detailsStr.includes('database') || detailsStr.includes('db')) return AlertCategory.DATABASE;
+    if (detailsStr.includes('performance')) return AlertCategory.PERFORMANCE;
+    if (detailsStr.includes('application') || detailsStr.includes('app')) return AlertCategory.APPLICATION;
+  }
+  
   return AlertCategory.SYSTEM;
 }

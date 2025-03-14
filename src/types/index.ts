@@ -122,11 +122,36 @@ export interface CloudwatchAlert extends ThirdPartyAlertBase {
   dimensions?: Record<string, string>;
 }
 
+export interface OpsgenieAlert extends ThirdPartyAlertBase {
+  source: 'opsgenie';
+  id: string;
+  message: string;
+  description?: string;
+  priority: 'P1' | 'P2' | 'P3' | 'P4' | 'P5';
+  createdAt: string;
+  updatedAt?: string;
+  status: 'open' | 'acknowledged' | 'closed';
+  tags?: string[];
+  details?: Record<string, any>;
+  alertId?: string;
+}
+
 export type ThirdPartyAlert = 
   | PrometheusAlert 
   | NagiosAlert 
   | ElasticsearchAlert 
-  | CloudwatchAlert;
+  | CloudwatchAlert
+  | OpsgenieAlert;
+
+// Connector Types
+export interface Connector {
+  id: string;
+  name: string;
+  type: string;
+  enabled: boolean;
+  config: Record<string, any>;
+  teamId?: string;
+}
 
 // Core Application Context Types
 export interface CoreContextType {
@@ -137,6 +162,12 @@ export interface CoreContextType {
   setCurrentModuleId: (id: string | null) => void;
   getModuleById: (id: string) => ModuleDefinition | undefined;
   toggleModuleAlerts: (moduleId: string, enabled: boolean) => void;
+  // Connector-related properties
+  connectors: Connector[];
+  registerConnector: (connector: Connector) => void;
+  unregisterConnector: (connectorId: string) => void;
+  getConnectorsByType: (type: string) => Connector[];
+  toggleConnector: (connectorId: string, enabled: boolean) => void;
 }
 
 // Alert Manager Context Types
