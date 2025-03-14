@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAlertContext } from '../../core/AlertContext';
-import { AlertSeverity } from '../../types';
+import { AlertSeverity, AlertCategory } from '../../types';
 
 const DashboardContainer = styled.div`
   padding: 20px;
@@ -96,6 +96,8 @@ const ServerDashboard: React.FC = () => {
       title: 'Server backup completed',
       message: 'Weekly backup process completed successfully for all servers.',
       severity: AlertSeverity.INFO,
+      category: AlertCategory.SYSTEM,
+      source: 'internal',
     });
   };
   
@@ -105,6 +107,14 @@ const ServerDashboard: React.FC = () => {
       title: 'High memory usage',
       message: `Server APP-01 memory usage is at ${metrics.memoryUsage}%, which is approaching critical levels.`,
       severity: AlertSeverity.WARNING,
+      category: AlertCategory.PERFORMANCE,
+      source: 'internal',
+      entity: {
+        id: 'APP-01',
+        type: 'server',
+        name: 'Application Server 01'
+      },
+      tags: ['memory', 'performance']
     });
   };
   
@@ -114,6 +124,14 @@ const ServerDashboard: React.FC = () => {
       title: 'Disk space low',
       message: `Server DB-02 disk usage is at ${metrics.diskUsage}%. Please clean up unnecessary files.`,
       severity: AlertSeverity.ERROR,
+      category: AlertCategory.SYSTEM,
+      source: 'internal',
+      entity: {
+        id: 'DB-02',
+        type: 'database',
+        name: 'Database Server 02'
+      },
+      tags: ['disk', 'storage']
     });
   };
   
@@ -123,6 +141,14 @@ const ServerDashboard: React.FC = () => {
       title: 'Server unresponsive',
       message: 'Server WEB-03 is not responding to health checks. Immediate attention required.',
       severity: AlertSeverity.CRITICAL,
+      category: AlertCategory.SYSTEM,
+      source: 'internal',
+      entity: {
+        id: 'WEB-03',
+        type: 'webserver',
+        name: 'Web Server 03'
+      },
+      tags: ['connectivity', 'unresponsive']
     });
   };
   

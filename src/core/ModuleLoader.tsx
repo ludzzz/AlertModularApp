@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { useCoreContext, CoreModuleDefinition } from './CoreContext';
 import ModuleErrorBoundary from '../components/ModuleErrorBoundary';
 import { useAlertContext } from './AlertContext';
-import { AlertSeverity } from '../types';
+import { AlertSeverity, AlertCategory } from '../types';
 import { ModuleDefinition } from '../types';
 
 // Import core module
@@ -50,6 +50,8 @@ const ModuleLoader: React.FC = () => {
           title: 'Module Loaded',
           message: `Successfully loaded module: ${module.name}`,
           severity: AlertSeverity.INFO,
+          category: AlertCategory.SYSTEM,
+          source: 'internal',
         });
       }
     } catch (error) {
@@ -59,6 +61,8 @@ const ModuleLoader: React.FC = () => {
         title: 'Module Load Failed',
         message: `Failed to load module: ${module.name}. Error: ${error instanceof Error ? error.message : String(error)}`,
         severity: AlertSeverity.ERROR,
+        category: AlertCategory.SYSTEM,
+        source: 'internal',
       });
     }
   }, [registerModule, addAlert]);

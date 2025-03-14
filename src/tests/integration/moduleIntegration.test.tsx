@@ -3,7 +3,7 @@ import { render, act, screen, fireEvent } from '@testing-library/react';
 import { useAlertContext } from '../../core/AlertContext';
 import { CoreContextProvider } from '../../core/CoreContext';
 import { AlertContextProvider } from '../../core/AlertContext';
-import { AlertSeverity } from '../../types';
+import { AlertSeverity, AlertCategory } from '../../types';
 
 // Create a simplified test for the alert functionality
 describe('Alert Context Integration Tests', () => {
@@ -20,7 +20,9 @@ describe('Alert Context Integration Tests', () => {
               moduleId: 'test',
               title: 'Test Info Alert',
               message: 'This is a test info alert',
-              severity: AlertSeverity.INFO
+              severity: AlertSeverity.INFO,
+              category: AlertCategory.SYSTEM,
+              source: 'test'
             })}
           >
             Add Info Alert

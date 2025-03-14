@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useAlertContext } from '../../core/AlertContext';
-import { AlertSeverity } from '../../types';
+import { AlertSeverity, AlertCategory } from '../../types';
 
 const DashboardContainer = styled.div`
   padding: 20px;
@@ -94,6 +94,8 @@ const NetworkDashboard: React.FC = () => {
       title: 'Network scan completed',
       message: 'Routine network scan completed successfully. No issues found.',
       severity: AlertSeverity.INFO,
+      category: AlertCategory.NETWORK,
+      source: 'internal',
     });
   };
   
@@ -103,6 +105,14 @@ const NetworkDashboard: React.FC = () => {
       title: 'High bandwidth usage detected',
       message: `Current bandwidth usage is at ${metrics.bandwidth} Mbps, which is above normal levels.`,
       severity: AlertSeverity.WARNING,
+      category: AlertCategory.PERFORMANCE,
+      source: 'internal',
+      entity: {
+        id: 'router-01',
+        type: 'network',
+        name: 'Main Router'
+      },
+      tags: ['bandwidth', 'performance']
     });
   };
   
@@ -112,6 +122,14 @@ const NetworkDashboard: React.FC = () => {
       title: 'High latency detected',
       message: `Network latency is at ${metrics.latency} ms, which may affect application performance.`,
       severity: AlertSeverity.ERROR,
+      category: AlertCategory.PERFORMANCE,
+      source: 'internal',
+      entity: {
+        id: 'network-segment-3',
+        type: 'network',
+        name: 'Network Segment 3'
+      },
+      tags: ['latency', 'performance']
     });
   };
   
@@ -121,6 +139,14 @@ const NetworkDashboard: React.FC = () => {
       title: 'Network device offline',
       message: 'Core router is not responding to ping requests. Immediate attention required.',
       severity: AlertSeverity.CRITICAL,
+      category: AlertCategory.NETWORK,
+      source: 'internal',
+      entity: {
+        id: 'core-router',
+        type: 'network',
+        name: 'Core Router'
+      },
+      tags: ['connectivity', 'offline']
     });
   };
   

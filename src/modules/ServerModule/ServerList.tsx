@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useAlertContext } from '../../core/AlertContext';
-import { AlertSeverity } from '../../types';
+import { AlertSeverity, AlertCategory } from '../../types';
 
 const Container = styled.div`
   padding: 20px;
@@ -191,6 +191,14 @@ const ServerList: React.FC = () => {
       title: `Server restart initiated: ${server.name}`,
       message: `A restart has been initiated for server ${server.name} (${server.ip}).`,
       severity: AlertSeverity.INFO,
+      category: AlertCategory.SYSTEM,
+      source: 'internal',
+      entity: {
+        id: server.id,
+        type: 'server',
+        name: server.name
+      },
+      tags: ['restart', 'maintenance']
     });
   };
   
@@ -200,6 +208,14 @@ const ServerList: React.FC = () => {
       title: `Server shutdown initiated: ${server.name}`,
       message: `A shutdown has been initiated for server ${server.name} (${server.ip}).`,
       severity: AlertSeverity.WARNING,
+      category: AlertCategory.SYSTEM,
+      source: 'internal',
+      entity: {
+        id: server.id,
+        type: 'server',
+        name: server.name
+      },
+      tags: ['shutdown', 'maintenance']
     });
     
     // Update server status

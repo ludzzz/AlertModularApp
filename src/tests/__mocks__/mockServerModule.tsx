@@ -1,5 +1,5 @@
 import React from 'react';
-import { ModuleDefinition, AlertSeverity } from '../../types';
+import { ModuleDefinition, AlertSeverity, AlertCategory } from '../../types';
 import { useAlertContext } from '../../core/AlertContext';
 
 // Mock Server Dashboard component
@@ -12,6 +12,8 @@ const MockServerDashboard: React.FC = () => {
       title: `Test Server ${severity} Alert`,
       message: `This is a test server ${severity} alert`,
       severity: severity,
+      category: AlertCategory.SYSTEM,
+      source: 'test',
     });
   };
   
