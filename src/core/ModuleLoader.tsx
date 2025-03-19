@@ -10,8 +10,10 @@ import { ModuleDefinition } from '../types';
 import CoreModule from './CoreModule';
 
 // Import available modules
-import NetworkModule, { routes as networkRoutes } from '../modules/NetworkModule';
-import ServerModule, { routes as serverRoutes } from '../modules/ServerModule';
+import FrontendModule, { routes as frontendRoutes } from '../modules/FrontendModule';
+import RiskPnlModule, { routes as riskPnlRoutes } from '../modules/RiskPnlModule';
+import BackendModule, { routes as backendRoutes } from '../modules/BackendModule';
+import ToolsAndJobsModule, { routes as toolsAndJobsRoutes } from '../modules/ToolsAndJobsModule';
 
 // Add module loaded tracking to window to persist across StrictMode remounts
 declare global {
@@ -72,8 +74,10 @@ const ModuleLoader: React.FC = () => {
     loadModule(CoreModuleDefinition);
     
     // Register other modules
-    loadModule(NetworkModule);
-    loadModule(ServerModule);
+    loadModule(FrontendModule);
+    loadModule(RiskPnlModule);
+    loadModule(BackendModule);
+    loadModule(ToolsAndJobsModule);
     
     // No cleanup needed - we want the loaded state to persist
     // across StrictMode unmounts/remounts
@@ -94,26 +98,52 @@ const ModuleLoader: React.FC = () => {
         </ModuleErrorBoundary>
       } />
       
-      {/* Network module routes */}
-      {networkRoutes.map(route => (
+      {/* Frontend module routes */}
+      {frontendRoutes.map(route => (
         <Route 
           key={route.path} 
           path={route.path} 
           element={
-            <ModuleErrorBoundary moduleId="network" moduleName="Network Monitoring">
+            <ModuleErrorBoundary moduleId="frontend" moduleName="Frontend">
               <route.component />
             </ModuleErrorBoundary>
           } 
         />
       ))}
       
-      {/* Server module routes */}
-      {serverRoutes.map(route => (
+      {/* Risk & PnL module routes */}
+      {riskPnlRoutes.map(route => (
         <Route 
           key={route.path} 
           path={route.path} 
           element={
-            <ModuleErrorBoundary moduleId="server" moduleName="Server Monitoring">
+            <ModuleErrorBoundary moduleId="riskpnl" moduleName="Risk & PnL">
+              <route.component />
+            </ModuleErrorBoundary>
+          } 
+        />
+      ))}
+      
+      {/* Backend module routes */}
+      {backendRoutes.map(route => (
+        <Route 
+          key={route.path} 
+          path={route.path} 
+          element={
+            <ModuleErrorBoundary moduleId="backend" moduleName="Backend">
+              <route.component />
+            </ModuleErrorBoundary>
+          } 
+        />
+      ))}
+      
+      {/* Tools & Jobs module routes */}
+      {toolsAndJobsRoutes.map(route => (
+        <Route 
+          key={route.path} 
+          path={route.path} 
+          element={
+            <ModuleErrorBoundary moduleId="toolsandjobs" moduleName="Tools & Jobs">
               <route.component />
             </ModuleErrorBoundary>
           } 

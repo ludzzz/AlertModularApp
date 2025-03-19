@@ -37,12 +37,12 @@ jest.mock('../core/AlertContext', () => ({
   })
 }));
 
-// Mock NetworkModule
-jest.mock('../modules/NetworkModule', () => ({
+// Mock the new modules
+jest.mock('../modules/FrontendModule', () => ({
   __esModule: true,
   default: {
-    id: 'network',
-    name: 'Network Monitoring',
+    id: 'frontend',
+    name: 'Frontend Services',
     menuItems: [],
     component: () => null,
     alertsEnabled: true
@@ -50,12 +50,35 @@ jest.mock('../modules/NetworkModule', () => ({
   routes: []
 }));
 
-// Mock ServerModule
-jest.mock('../modules/ServerModule', () => ({
+jest.mock('../modules/RiskPnlModule', () => ({
   __esModule: true,
   default: {
-    id: 'server',
-    name: 'Server Monitoring',
+    id: 'riskpnl',
+    name: 'Risk & PnL',
+    menuItems: [],
+    component: () => null,
+    alertsEnabled: true
+  },
+  routes: []
+}));
+
+jest.mock('../modules/BackendModule', () => ({
+  __esModule: true,
+  default: {
+    id: 'backend',
+    name: 'Backend Services',
+    menuItems: [],
+    component: () => null,
+    alertsEnabled: true
+  },
+  routes: []
+}));
+
+jest.mock('../modules/ToolsAndJobsModule', () => ({
+  __esModule: true,
+  default: {
+    id: 'toolsandjobs',
+    name: 'Tools & Jobs',
     menuItems: [],
     component: () => null,
     alertsEnabled: true
@@ -83,11 +106,11 @@ describe('ModuleLoader', () => {
   test('registers modules only once on mount', () => {
     render(<ModuleLoader />);
     
-    // Check that register was called 3 times (for core and 2 modules)
-    expect(mockRegisterModule).toHaveBeenCalledTimes(3);
+    // Check that register was called 5 times (for core and 4 modules)
+    expect(mockRegisterModule).toHaveBeenCalledTimes(5);
     
-    // Check that alerts were added only for non-core modules (2 times)
-    expect(mockAddAlert).toHaveBeenCalledTimes(2);
+    // Check that alerts were added only for non-core modules (4 times)
+    expect(mockAddAlert).toHaveBeenCalledTimes(4);
   });
 
   test('does not re-register modules on re-render', () => {
