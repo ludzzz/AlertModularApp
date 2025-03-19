@@ -296,7 +296,8 @@ const BackendDashboard: React.FC = () => {
       case 'performance':
         const isHighCpu = service.cpu > 70;
         const isHighMemory = service.memory > 80;
-        const isHighLatency = service.responseTime > 300;
+        // isHighLatency is currently unused, but kept for future use
+        // const isHighLatency = service.responseTime > 300;
         
         let performanceIssue = isHighCpu ? 'CPU' : isHighMemory ? 'Memory' : 'Response time';
         let performanceValue = isHighCpu ? `${service.cpu}%` : isHighMemory ? `${service.memory}%` : `${service.responseTime}ms`;

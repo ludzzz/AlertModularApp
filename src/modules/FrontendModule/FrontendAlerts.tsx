@@ -309,8 +309,7 @@ const FrontendAlerts: React.FC = () => {
   
   // Use our custom hook to fetch connector alerts
   const { 
-    isLoading, 
-    error, 
+    // isLoading and error are not currently used but kept for future use
     refreshAlerts 
   } = useConnectorAlerts({
     moduleId: 'frontend',

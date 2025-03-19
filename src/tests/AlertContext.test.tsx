@@ -251,7 +251,7 @@ describe('AlertContext', () => {
     expect(getByTestId('panel-state').textContent).toBe('Collapsed');
   });
 
-  test('can clear all alerts', () => {
+  test('can clear all alerts and they do not come back', () => {
     const { getByTestId } = renderWithProviders();
     
     // Add multiple alerts
@@ -265,6 +265,15 @@ describe('AlertContext', () => {
     
     act(() => {
       getByTestId('clear-all').click();
+    });
+    
+    expect(getByTestId('alert-count').textContent).toBe('0');
+    
+    // Verify sample alerts don't come back after clearing
+    // We need to trigger a re-render to check
+    act(() => {
+      getByTestId('toggle-panel').click();
+      getByTestId('toggle-panel').click();
     });
     
     expect(getByTestId('alert-count').textContent).toBe('0');

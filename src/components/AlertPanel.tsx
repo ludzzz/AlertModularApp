@@ -187,7 +187,7 @@ const AlertPanel: React.FC = () => {
                     e.stopPropagation();
                     acknowledgeAlert(alert.id);
                   }}>
-                    {alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
+                    {alert.acknowledged ? 'Acked' : 'Ack'}
                   </ActionButton>
                   {' '}
                   <ActionButton onClick={(e) => {

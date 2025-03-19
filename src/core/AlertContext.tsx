@@ -45,6 +45,7 @@ interface AlertContextProviderProps {
 export const AlertContextProvider: React.FC<AlertContextProviderProps> = ({ children }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [panelExpanded, setPanelExpanded] = useState<boolean>(false);
+  const [sampleAlertsLoaded, setSampleAlertsLoaded] = useState<boolean>(false);
   const { modules } = useCoreContext();
   
   // Add some sample alerts for demonstration purposes, but only in non-test environments
@@ -52,9 +53,10 @@ export const AlertContextProvider: React.FC<AlertContextProviderProps> = ({ chil
     // Check if running in test environment
     const isTestEnv = process.env.NODE_ENV === 'test';
     
-    // Only add sample alerts if not in test env and no alerts exist yet
-    if (!isTestEnv && alerts.length === 0 && window.location.pathname !== '/test') {
+    // Only add sample alerts if not in test env, no alerts exist yet, and we haven't loaded sample alerts before
+    if (!isTestEnv && alerts.length === 0 && !sampleAlertsLoaded && window.location.pathname !== '/test') {
       // Create the sample alerts only once when the app first loads
+      setSampleAlertsLoaded(true);
       const sampleAlerts = [
         {
           moduleId: 'network',
@@ -120,7 +122,7 @@ export const AlertContextProvider: React.FC<AlertContextProviderProps> = ({ chil
         acknowledged: false
       })));
     }
-  }, [alerts.length]);
+  }, [alerts.length, sampleAlertsLoaded]);
 
   // Add a new alert with enhanced format
   const addAlert = (alertData: Omit<Alert, 'id' | 'timestamp' | 'acknowledged' | 'status'>) => {
@@ -279,6 +281,7 @@ export const AlertContextProvider: React.FC<AlertContextProviderProps> = ({ chil
   // Clear all alerts
   const clearAllAlerts = () => {
     setAlerts([]);
+    // We don't reset sampleAlertsLoaded, so sample alerts won't be re-added
   };
 
   // Toggle panel expansion

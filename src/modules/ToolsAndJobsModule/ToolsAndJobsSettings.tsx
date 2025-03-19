@@ -40,12 +40,14 @@ const Input = styled.input`
   border-radius: 4px;
 `;
 
-const Select = styled.select`
+// Select component is defined but not currently used
+// Keeping it for future implementation
+/*const Select = styled.select`
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-`;
+`;*/
 
 const Checkbox = styled.input`
   margin-right: 8px;
@@ -122,18 +124,22 @@ const ActionButton = styled.button`
   }
 `;
 
-const TimeInput = styled.div`
+// TimeInput component is defined but not currently used
+// Keeping it for future implementation
+/*const TimeInput = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
-`;
+`;*/
 
-const TimeInputField = styled.input`
+// TimeInputField component is defined but not currently used
+// Keeping it for future implementation
+/*const TimeInputField = styled.input`
   width: 80px;
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-`;
+`;*/
 
 const ToolsAndJobsSettings: React.FC = () => {
   // Settings tabs

@@ -71,14 +71,18 @@ const Button = styled.button`
   }
 `;
 
-const Toggle = styled.div`
+// Toggle component is defined but not currently used
+// Keeping it for future implementation
+/*const Toggle = styled.div`
   display: inline-block;
   position: relative;
   width: 60px;
   height: 28px;
-`;
+`;*/
 
-const ToggleInput = styled.input`
+// ToggleInput component is defined but not currently used
+// Keeping it for future implementation
+/*const ToggleInput = styled.input`
   opacity: 0;
   width: 0;
   height: 0;
@@ -90,9 +94,11 @@ const ToggleInput = styled.input`
   &:checked + span:before {
     transform: translateX(32px);
   }
-`;
+`;*/
 
-const ToggleSlider = styled.span`
+// ToggleSlider component is defined but not currently used
+// Keeping it for future implementation
+/*const ToggleSlider = styled.span`
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -114,7 +120,7 @@ const ToggleSlider = styled.span`
     transition: .4s;
     border-radius: 50%;
   }
-`;
+`;*/
 
 const FrontendSettings: React.FC = () => {
   // Settings state
