@@ -1,7 +1,7 @@
 import { ModuleDefinition } from '../../types';
-import FrontendDashboard from './FrontendDashboard';
-import FrontendSettings from './FrontendSettings';
-import FrontendAlerts from './FrontendAlerts';
+import { DashboardPage } from './pages/DashboardPage';
+import { AlertsPage } from './pages/AlertsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 // This is the main export of the module
 const FrontendModule: ModuleDefinition = {
@@ -28,7 +28,7 @@ const FrontendModule: ModuleDefinition = {
       icon: '⚙️'
     }
   ],
-  component: FrontendDashboard,
+  component: DashboardPage, // Default component for the module home page
   alertsEnabled: true
 };
 
@@ -38,14 +38,14 @@ export default FrontendModule;
 export const routes = [
   {
     path: '/frontend',
-    component: FrontendDashboard
+    component: DashboardPage
   },
   {
     path: '/frontend/alerts',
-    component: FrontendAlerts
+    component: AlertsPage
   },
   {
     path: '/frontend/settings',
-    component: FrontendSettings
+    component: SettingsPage
   }
 ];

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
   Alert, 
@@ -45,85 +45,8 @@ interface AlertContextProviderProps {
 export const AlertContextProvider: React.FC<AlertContextProviderProps> = ({ children }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [panelExpanded, setPanelExpanded] = useState<boolean>(false);
-  const [sampleAlertsLoaded, setSampleAlertsLoaded] = useState<boolean>(false);
   const { modules } = useCoreContext();
   
-  // Add some sample alerts for demonstration purposes, but only in non-test environments
-  useEffect(() => {
-    // Check if running in test environment
-    const isTestEnv = process.env.NODE_ENV === 'test';
-    
-    // Only add sample alerts if not in test env, no alerts exist yet, and we haven't loaded sample alerts before
-    if (!isTestEnv && alerts.length === 0 && !sampleAlertsLoaded && window.location.pathname !== '/test') {
-      // Create the sample alerts only once when the app first loads
-      setSampleAlertsLoaded(true);
-      const sampleAlerts = [
-        {
-          moduleId: 'network',
-          title: 'Network scan completed',
-          message: 'Routine network scan completed successfully. No issues found.',
-          severity: AlertSeverity.INFO,
-          category: AlertCategory.NETWORK,
-          status: AlertStatus.ACTIVE,
-          source: 'internal',
-        },
-        {
-          moduleId: 'network',
-          title: 'High bandwidth usage detected',
-          message: 'Current bandwidth usage is at 145 Mbps, which is above normal levels.',
-          severity: AlertSeverity.WARNING,
-          category: AlertCategory.PERFORMANCE,
-          status: AlertStatus.ACTIVE,
-          source: 'internal',
-          entity: {
-            id: 'router-01',
-            type: 'network-device',
-            name: 'Main Router'
-          },
-          tags: ['bandwidth', 'threshold-exceeded']
-        },
-        {
-          moduleId: 'server',
-          title: 'High CPU usage',
-          message: 'Server DB-01 is experiencing high CPU usage (92%).',
-          severity: AlertSeverity.ERROR,
-          category: AlertCategory.PERFORMANCE,
-          status: AlertStatus.ACTIVE,
-          source: 'internal',
-          entity: {
-            id: 'db-01',
-            type: 'server',
-            name: 'Database Server 01'
-          },
-          tags: ['cpu', 'performance']
-        },
-        {
-          moduleId: 'server',
-          title: 'Server offline',
-          message: 'Web server WEB-03 is not responding to ping requests. Immediate attention required.',
-          severity: AlertSeverity.CRITICAL,
-          category: AlertCategory.SYSTEM,
-          status: AlertStatus.ACTIVE,
-          source: 'internal',
-          entity: {
-            id: 'web-03',
-            type: 'server',
-            name: 'Web Server 03'
-          },
-          tags: ['connectivity', 'offline']
-        }
-      ];
-      
-      // Add all alerts at once to avoid multiple state updates
-      setAlerts(sampleAlerts.map(alert => ({
-        ...alert,
-        id: uuidv4(),
-        timestamp: new Date(),
-        acknowledged: false
-      })));
-    }
-  }, [alerts.length, sampleAlertsLoaded]);
-
   // Add a new alert with enhanced format
   const addAlert = (alertData: Omit<Alert, 'id' | 'timestamp' | 'acknowledged' | 'status'>) => {
     const id = uuidv4();

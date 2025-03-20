@@ -1,7 +1,7 @@
 import { ModuleDefinition } from '../../types';
-import BackendDashboard from './BackendDashboard';
-import BackendSettings from './BackendSettings';
-import BackendAlerts from './BackendAlerts';
+import { DashboardPage } from './pages/DashboardPage';
+import { AlertsPage } from './pages/AlertsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 // This is the main export of the module
 const BackendModule: ModuleDefinition = {
@@ -28,7 +28,7 @@ const BackendModule: ModuleDefinition = {
       icon: '⚙️'
     }
   ],
-  component: BackendDashboard,
+  component: DashboardPage, // Default component for module home page
   alertsEnabled: true
 };
 
@@ -38,14 +38,14 @@ export default BackendModule;
 export const routes = [
   {
     path: '/backend',
-    component: BackendDashboard
+    component: DashboardPage
   },
   {
     path: '/backend/alerts',
-    component: BackendAlerts
+    component: AlertsPage
   },
   {
     path: '/backend/settings',
-    component: BackendSettings
+    component: SettingsPage
   }
 ];

@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useAlertContext } from '../../core/AlertContext';
-import { useConnectorAlerts } from '../../hooks/useConnectorAlerts';
-import { useCoreContext } from '../../core/CoreContext'; 
+import { useAlertContext } from '../../../core/AlertContext';
+import { useConnectorAlerts } from '../../../hooks/useConnectorAlerts';
 import { 
   Alert, 
   AlertSeverity, 
   AlertCategory, 
   AlertStatus,
-  PrometheusAlert,
-  OpsgenieAlert
-} from '../../types';
+  NagiosAlert
+} from '../../../types';
 
 const Container = styled.div`
   padding: 20px;
@@ -146,86 +144,6 @@ const EmptyState = styled.div`
   color: #95a5a6;
 `;
 
-const ConnectorStatus = styled.div<{ status: 'error' | 'loading' | 'connected' | 'not-configured' }>`
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  background-color: ${({ status }) => {
-    switch (status) {
-      case 'error':
-        return '#ffebee';
-      case 'loading':
-        return '#e3f2fd';
-      case 'connected':
-        return '#e8f5e9';
-      case 'not-configured':
-        return '#fff8e1';
-      default:
-        return '#f5f5f5';
-    }
-  }};
-  color: ${({ status }) => {
-    switch (status) {
-      case 'error':
-        return '#b71c1c';
-      case 'loading':
-        return '#0d47a1';
-      case 'connected':
-        return '#1b5e20';
-      case 'not-configured':
-        return '#ff6f00';
-      default:
-        return '#212121';
-    }
-  }};
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const AddAlertForm = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const FormHeader = styled.h3`
-  margin-top: 0;
-  margin-bottom: 15px;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 15px;
-`;
-
-const Label = styled.label`
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-`;
-
 const CategoryBadge = styled.span<{ category: AlertCategory }>`
   padding: 3px 6px;
   border-radius: 4px;
@@ -335,7 +253,50 @@ const StatusBadge = styled.span<{ status: AlertStatus }>`
   }};
 `;
 
-const NetworkAlerts: React.FC = () => {
+const AddAlertForm = styled.div`
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const FormHeader = styled.h3`
+  margin-top: 0;
+  margin-bottom: 15px;
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 15px;
+`;
+
+const Label = styled.label`
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+`;
+
+const ToolsAndJobsAlerts: React.FC = () => {
   const { 
     alerts, 
     addAlert, 
@@ -346,60 +307,34 @@ const NetworkAlerts: React.FC = () => {
     removeAlert 
   } = useAlertContext();
   
-  const { connectors } = useCoreContext();
-  
   // Use our custom hook to fetch connector alerts
   const { 
-    isLoading, 
-    error, 
+    // isLoading and error are not currently used but kept for future use
     refreshAlerts 
   } = useConnectorAlerts({
-    moduleId: 'network',
-    teamId: 'network-team',
+    moduleId: 'toolsandjobs',
+    teamId: 'operations-team',
     refreshInterval: 30000 // 30 seconds
   });
   
-  const networkAlerts = alerts.filter(alert => alert.moduleId === 'network');
+  const toolsAndJobsAlerts = alerts.filter(alert => alert.moduleId === 'toolsandjobs');
   
-  // State for connector status
-  const [connectorStatus, setConnectorStatus] = useState<'error' | 'loading' | 'connected' | 'not-configured'>('loading');
-  
-  // Check connector status when connectors or loading state changes
-  useEffect(() => {
-    if (error) {
-      setConnectorStatus('error');
-    } else if (isLoading) {
-      setConnectorStatus('loading');
-    } else if (connectors.some(c => c.enabled && c.type === 'opsgenie')) {
-      setConnectorStatus('connected');
-    } else {
-      setConnectorStatus('not-configured');
-    }
-  }, [connectors, isLoading, error]);
-  
-  // Demo form state
+  // State for demo form
   const [showDemoForm, setShowDemoForm] = useState(false);
-  const [alertType, setAlertType] = useState<'internal' | 'prometheus' | 'opsgenie'>('internal');
+  const [alertType, setAlertType] = useState<'internal' | 'nagios'>('internal');
   
   // Form state for internal alert
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState<AlertSeverity>(AlertSeverity.INFO);
-  const [category, setCategory] = useState<AlertCategory>(AlertCategory.NETWORK);
+  const [category, setCategory] = useState<AlertCategory>(AlertCategory.SYSTEM);
   
-  // Form state for Prometheus alert
-  const [alertname, setAlertname] = useState('');
-  const [instance, setInstance] = useState('network-router-01');
-  const [job, setJob] = useState('network-monitoring');
-  const [prometheusSeverity, setPrometheusSeverity] = useState('warning');
-  const [summary, setSummary] = useState('');
-  const [description, setDescription] = useState('');
-  
-  // Form state for Opsgenie alert
-  const [opsgenieTitle, setOpsgenieTitle] = useState('');
-  const [opsgenieMessage, setOpsgenieMessage] = useState('');
-  const [opsgeniePriority, setOpsgeniePriority] = useState<'P1' | 'P2' | 'P3' | 'P4' | 'P5'>('P2');
-  const [opsgenieTags, setOpsgenieTags] = useState('network,router,team:network-team');
+  // Form state for Nagios alert
+  const [hostName, setHostName] = useState('job-server');
+  const [serviceDescription, setServiceDescription] = useState('Scheduled Jobs');
+  const [state, setState] = useState<'OK' | 'WARNING' | 'CRITICAL' | 'UNKNOWN'>('WARNING');
+  const [output, setOutput] = useState('');
+  const [longOutput, setLongOutput] = useState('');
   
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString();
@@ -407,7 +342,7 @@ const NetworkAlerts: React.FC = () => {
   
   const handleAddInternalAlert = () => {
     addAlert({
-      moduleId: 'network',
+      moduleId: 'toolsandjobs',
       title,
       message,
       severity,
@@ -420,97 +355,40 @@ const NetworkAlerts: React.FC = () => {
     setTitle('');
     setMessage('');
     setSeverity(AlertSeverity.INFO);
-    setCategory(AlertCategory.NETWORK);
+    setCategory(AlertCategory.SYSTEM);
     setShowDemoForm(false);
   };
   
-  const handleAddPrometheusAlert = () => {
-    const prometheusAlert: PrometheusAlert = {
-      source: 'prometheus',
-      alertname,
-      instance,
-      job,
-      severity: prometheusSeverity,
-      summary,
-      description,
-      status: 'firing',
-      startsAt: new Date().toISOString(),
-      labels: {
-        alert_type: 'network',
-        environment: 'production',
-        instance,
-        job
-      }
+  const handleAddNagiosAlert = () => {
+    const nagiosAlert: NagiosAlert = {
+      source: 'nagios',
+      host_name: hostName,
+      service_description: serviceDescription,
+      state,
+      output,
+      long_output: longOutput,
+      timestamp: Math.floor(Date.now() / 1000), // Current time in seconds
+      attempt: Math.floor(Math.random() * 3) + 1
     };
     
-    addThirdPartyAlert(prometheusAlert, 'network');
+    addThirdPartyAlert(nagiosAlert, 'toolsandjobs');
     
     // Reset form
-    setAlertname('');
-    setSummary('');
-    setDescription('');
-    setInstance('network-router-01');
-    setJob('network-monitoring');
-    setPrometheusSeverity('warning');
-    setShowDemoForm(false);
-  };
-  
-  const handleAddOpsgenieAlert = () => {
-    const opsgenieAlert: OpsgenieAlert = {
-      source: 'opsgenie',
-      message: opsgenieTitle,
-      description: opsgenieMessage,
-      priority: opsgeniePriority,
-      createdAt: new Date().toISOString(),
-      tags: opsgenieTags.split(',').map(tag => tag.trim()),
-      details: {
-        teamId: 'network-team',
-        responders: 'Network Team',
-        source: 'AlertModular'
-      },
-      id: `opsgenie-${Date.now()}`,
-      status: 'open'
-    };
-    
-    addThirdPartyAlert(opsgenieAlert, 'network');
-    
-    // Reset form
-    setOpsgenieTitle('');
-    setOpsgenieMessage('');
-    setOpsgeniePriority('P2');
-    setOpsgenieTags('network,router,team:network-team');
+    setHostName('job-server');
+    setServiceDescription('Scheduled Jobs');
+    setState('WARNING');
+    setOutput('');
+    setLongOutput('');
     setShowDemoForm(false);
   };
   
   return (
     <Container>
-      <Header>Network Alerts</Header>
-      
-      {/* Connector Status Banner */}
-      <ConnectorStatus status={connectorStatus}>
-        {connectorStatus === 'error' && (
-          <>
-            <span>🔴 Error connecting to Opsgenie. Alerts may be missing.</span>
-            <Button onClick={refreshAlerts}>Retry Connection</Button>
-          </>
-        )}
-        {connectorStatus === 'loading' && (
-          <span>⏳ Connecting to Opsgenie...</span>
-        )}
-        {connectorStatus === 'connected' && (
-          <span>✅ Connected to Opsgenie - retrieving team alerts.</span>
-        )}
-        {connectorStatus === 'not-configured' && (
-          <>
-            <span>⚠️ Opsgenie connector not configured. Please set up in Settings.</span>
-            <Button onClick={() => window.location.href = '/settings'}>Go to Settings</Button>
-          </>
-        )}
-      </ConnectorStatus>
+      <Header>Tools & Jobs Alerts</Header>
       
       <ButtonGroup>
         <Button onClick={() => setShowDemoForm(!showDemoForm)}>
-          {showDemoForm ? 'Hide Demo Form' : 'Add Demo Alert'}
+          {showDemoForm ? 'Hide Demo Form' : 'Add Test Alert'}
         </Button>
         <Button onClick={refreshAlerts}>
           Refresh Alerts
@@ -519,17 +397,16 @@ const NetworkAlerts: React.FC = () => {
       
       {showDemoForm && (
         <AddAlertForm>
-          <FormHeader>Add Demo Alert</FormHeader>
+          <FormHeader>Add Test Alert</FormHeader>
           
           <FormGroup>
             <Label>Alert Type</Label>
             <Select 
               value={alertType} 
-              onChange={(e) => setAlertType(e.target.value as 'internal' | 'prometheus' | 'opsgenie')}
+              onChange={(e) => setAlertType(e.target.value as 'internal' | 'nagios')}
             >
               <option value="internal">Internal Alert</option>
-              <option value="prometheus">Prometheus Alert</option>
-              <option value="opsgenie">Opsgenie Alert</option>
+              <option value="nagios">Nagios Alert</option>
             </Select>
           </FormGroup>
           
@@ -574,137 +451,79 @@ const NetworkAlerts: React.FC = () => {
                   value={category} 
                   onChange={(e) => setCategory(e.target.value as AlertCategory)}
                 >
-                  <option value={AlertCategory.NETWORK}>Network</option>
-                  <option value={AlertCategory.PERFORMANCE}>Performance</option>
-                  <option value={AlertCategory.SECURITY}>Security</option>
                   <option value={AlertCategory.SYSTEM}>System</option>
+                  <option value={AlertCategory.PERFORMANCE}>Performance</option>
+                  <option value={AlertCategory.APPLICATION}>Application</option>
+                  <option value={AlertCategory.SECURITY}>Security</option>
                 </Select>
               </FormGroup>
               
               <Button onClick={handleAddInternalAlert}>Add Internal Alert</Button>
             </>
-          ) : alertType === 'prometheus' ? (
-            <>
-              <FormGroup>
-                <Label>Alert Name</Label>
-                <Input 
-                  type="text" 
-                  value={alertname} 
-                  onChange={(e) => setAlertname(e.target.value)}
-                  placeholder="e.g., NetworkLatencyHigh"
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <Label>Instance</Label>
-                <Input 
-                  type="text" 
-                  value={instance} 
-                  onChange={(e) => setInstance(e.target.value)}
-                  placeholder="e.g., network-router-01"
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <Label>Job</Label>
-                <Input 
-                  type="text" 
-                  value={job} 
-                  onChange={(e) => setJob(e.target.value)}
-                  placeholder="e.g., network-monitoring"
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <Label>Severity</Label>
-                <Select 
-                  value={prometheusSeverity} 
-                  onChange={(e) => setPrometheusSeverity(e.target.value)}
-                >
-                  <option value="info">Info</option>
-                  <option value="warning">Warning</option>
-                  <option value="error">Error</option>
-                  <option value="critical">Critical</option>
-                </Select>
-              </FormGroup>
-              
-              <FormGroup>
-                <Label>Summary</Label>
-                <Input 
-                  type="text" 
-                  value={summary} 
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Brief summary of the alert"
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <Label>Description</Label>
-                <Input 
-                  type="text" 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Detailed description of the alert"
-                />
-              </FormGroup>
-              
-              <Button onClick={handleAddPrometheusAlert}>Add Prometheus Alert</Button>
-            </>
           ) : (
             <>
               <FormGroup>
-                <Label>Title</Label>
+                <Label>Host Name</Label>
                 <Input 
                   type="text" 
-                  value={opsgenieTitle} 
-                  onChange={(e) => setOpsgenieTitle(e.target.value)}
-                  placeholder="Alert title"
+                  value={hostName} 
+                  onChange={(e) => setHostName(e.target.value)}
+                  placeholder="e.g., job-server"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>Message</Label>
+                <Label>Service Description</Label>
                 <Input 
                   type="text" 
-                  value={opsgenieMessage} 
-                  onChange={(e) => setOpsgenieMessage(e.target.value)}
-                  placeholder="Detailed description"
+                  value={serviceDescription} 
+                  onChange={(e) => setServiceDescription(e.target.value)}
+                  placeholder="e.g., Scheduled Jobs"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>Priority</Label>
+                <Label>State</Label>
                 <Select 
-                  value={opsgeniePriority} 
-                  onChange={(e) => setOpsgeniePriority(e.target.value as 'P1' | 'P2' | 'P3' | 'P4' | 'P5')}
+                  value={state} 
+                  onChange={(e) => setState(e.target.value as 'OK' | 'WARNING' | 'CRITICAL' | 'UNKNOWN')}
                 >
-                  <option value="P1">P1 (Critical)</option>
-                  <option value="P2">P2 (High)</option>
-                  <option value="P3">P3 (Moderate)</option>
-                  <option value="P4">P4 (Low)</option>
-                  <option value="P5">P5 (Informational)</option>
+                  <option value="OK">OK</option>
+                  <option value="WARNING">Warning</option>
+                  <option value="CRITICAL">Critical</option>
+                  <option value="UNKNOWN">Unknown</option>
                 </Select>
               </FormGroup>
               
               <FormGroup>
-                <Label>Tags (comma separated)</Label>
+                <Label>Output</Label>
                 <Input 
                   type="text" 
-                  value={opsgenieTags} 
-                  onChange={(e) => setOpsgenieTags(e.target.value)}
-                  placeholder="network,router,team:network-team"
+                  value={output} 
+                  onChange={(e) => setOutput(e.target.value)}
+                  placeholder="Alert output message"
                 />
               </FormGroup>
               
-              <Button onClick={handleAddOpsgenieAlert}>Add Opsgenie Alert</Button>
+              <FormGroup>
+                <Label>Long Output (Optional)</Label>
+                <Input 
+                  type="text" 
+                  value={longOutput} 
+                  onChange={(e) => setLongOutput(e.target.value)}
+                  placeholder="Detailed alert information"
+                />
+              </FormGroup>
+              
+              <Button onClick={handleAddNagiosAlert}>Add Nagios Alert</Button>
             </>
           )}
         </AddAlertForm>
       )}
       
       <AlertsList>
-        {networkAlerts.length > 0 ? (
-          networkAlerts.map((alert: Alert) => (
+        {toolsAndJobsAlerts.length > 0 ? (
+          toolsAndJobsAlerts.map((alert: Alert) => (
             <AlertItem key={alert.id} severity={alert.severity} status={alert.status}>
               <AlertHeader>
                 <div>
@@ -766,8 +585,8 @@ const NetworkAlerts: React.FC = () => {
           ))
         ) : (
           <EmptyState>
-            <h3>No network alerts</h3>
-            <p>There are currently no alerts for the network module.</p>
+            <h3>No tools & jobs alerts</h3>
+            <p>There are currently no alerts for the tools & jobs module.</p>
           </EmptyState>
         )}
       </AlertsList>
@@ -775,4 +594,4 @@ const NetworkAlerts: React.FC = () => {
   );
 };
 
-export default NetworkAlerts;
+export default ToolsAndJobsAlerts;

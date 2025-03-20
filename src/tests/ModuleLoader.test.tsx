@@ -68,10 +68,14 @@ jest.mock('../modules/BackendModule', () => ({
     id: 'backend',
     name: 'Backend Services',
     menuItems: [],
-    component: () => null,
+    component: () => null, // Mock the DashboardPage component
     alertsEnabled: true
   },
-  routes: []
+  routes: [
+    { path: '/backend', component: () => null },
+    { path: '/backend/alerts', component: () => null },
+    { path: '/backend/settings', component: () => null }
+  ]
 }));
 
 jest.mock('../modules/ToolsAndJobsModule', () => ({

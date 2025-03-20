@@ -1,7 +1,7 @@
 import { ModuleDefinition } from '../../types';
-import ToolsAndJobsDashboard from './ToolsAndJobsDashboard';
-import ToolsAndJobsSettings from './ToolsAndJobsSettings';
-import ToolsAndJobsAlerts from './ToolsAndJobsAlerts';
+import DashboardPage from './pages/DashboardPage';
+import AlertsPage from './pages/AlertsPage';
+import SettingsPage from './pages/SettingsPage';
 
 // This is the main export of the module
 const ToolsAndJobsModule: ModuleDefinition = {
@@ -28,7 +28,7 @@ const ToolsAndJobsModule: ModuleDefinition = {
       icon: '⚙️'
     }
   ],
-  component: ToolsAndJobsDashboard,
+  component: DashboardPage,
   alertsEnabled: true
 };
 
@@ -38,14 +38,14 @@ export default ToolsAndJobsModule;
 export const routes = [
   {
     path: '/toolsandjobs',
-    component: ToolsAndJobsDashboard
+    component: DashboardPage
   },
   {
     path: '/toolsandjobs/alerts',
-    component: ToolsAndJobsAlerts
+    component: AlertsPage
   },
   {
     path: '/toolsandjobs/settings',
-    component: ToolsAndJobsSettings
+    component: SettingsPage
   }
 ];

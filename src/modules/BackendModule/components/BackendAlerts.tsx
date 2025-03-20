@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useAlertContext } from '../../core/AlertContext';
-import { useConnectorAlerts } from '../../hooks/useConnectorAlerts';
+import { useAlertContext } from '../../../core/AlertContext';
+import { useConnectorAlerts } from '../../../hooks/useConnectorAlerts';
 import { 
   Alert, 
   AlertSeverity, 
   AlertCategory, 
   AlertStatus,
-  PrometheusAlert
-} from '../../types';
+  ElasticsearchAlert
+} from '../../../types';
 
 const Container = styled.div`
   padding: 20px;
@@ -296,7 +296,7 @@ const ButtonGroup = styled.div`
   margin-top: 20px;
 `;
 
-const FrontendAlerts: React.FC = () => {
+const BackendAlerts: React.FC = () => {
   const { 
     alerts, 
     addAlert, 
@@ -312,30 +312,30 @@ const FrontendAlerts: React.FC = () => {
     // isLoading and error are not currently used but kept for future use
     refreshAlerts 
   } = useConnectorAlerts({
-    moduleId: 'frontend',
-    teamId: 'frontend-team',
+    moduleId: 'backend',
+    teamId: 'backend-team',
     refreshInterval: 30000 // 30 seconds
   });
   
-  const frontendAlerts = alerts.filter(alert => alert.moduleId === 'frontend');
+  const backendAlerts = alerts.filter(alert => alert.moduleId === 'backend');
   
   // State for demo form
   const [showDemoForm, setShowDemoForm] = useState(false);
-  const [alertType, setAlertType] = useState<'internal' | 'prometheus'>('internal');
+  const [alertType, setAlertType] = useState<'internal' | 'elasticsearch'>('internal');
   
   // Form state for internal alert
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState<AlertSeverity>(AlertSeverity.INFO);
-  const [category, setCategory] = useState<AlertCategory>(AlertCategory.APPLICATION);
+  const [category, setCategory] = useState<AlertCategory>(AlertCategory.SYSTEM);
   
-  // Form state for Prometheus alert
-  const [alertname, setAlertname] = useState('');
-  const [instance, setInstance] = useState('frontend-app-01');
-  const [job, setJob] = useState('frontend-monitoring');
-  const [prometheusSeverity, setPrometheusSeverity] = useState('warning');
-  const [summary, setSummary] = useState('');
-  const [description, setDescription] = useState('');
+  // Form state for Elasticsearch alert
+  const [alertId, setAlertId] = useState(`es-${Date.now()}`);
+  const [alertName, setAlertName] = useState('');
+  const [elasticsearchSeverity, setElasticsearchSeverity] = useState<'info' | 'warning' | 'error' | 'critical'>('warning');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [clusterName, setClusterName] = useState('prod-cluster');
+  const [indexName, setIndexName] = useState('backend-logs');
   
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString();
@@ -343,7 +343,7 @@ const FrontendAlerts: React.FC = () => {
   
   const handleAddInternalAlert = () => {
     addAlert({
-      moduleId: 'frontend',
+      moduleId: 'backend',
       title,
       message,
       severity,
@@ -356,44 +356,42 @@ const FrontendAlerts: React.FC = () => {
     setTitle('');
     setMessage('');
     setSeverity(AlertSeverity.INFO);
-    setCategory(AlertCategory.APPLICATION);
+    setCategory(AlertCategory.SYSTEM);
     setShowDemoForm(false);
   };
   
-  const handleAddPrometheusAlert = () => {
-    const prometheusAlert: PrometheusAlert = {
-      source: 'prometheus',
-      alertname,
-      instance,
-      job,
-      severity: prometheusSeverity,
-      summary,
-      description,
-      status: 'firing',
-      startsAt: new Date().toISOString(),
-      labels: {
-        alert_type: 'frontend',
-        environment: 'production',
-        instance,
-        job
-      }
+  const handleAddElasticsearchAlert = () => {
+    const elasticsearchAlert: ElasticsearchAlert = {
+      source: 'elasticsearch',
+      id: alertId,
+      name: alertName,
+      severity: elasticsearchSeverity,
+      timestamp: new Date().toISOString(),
+      message: alertMessage,
+      details: {
+        event_count: Math.floor(Math.random() * 100) + 1,
+        first_occurrence: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        service: 'backend-service'
+      },
+      cluster: clusterName,
+      index: indexName
     };
     
-    addThirdPartyAlert(prometheusAlert, 'frontend');
+    addThirdPartyAlert(elasticsearchAlert, 'backend');
     
     // Reset form
-    setAlertname('');
-    setSummary('');
-    setDescription('');
-    setInstance('frontend-app-01');
-    setJob('frontend-monitoring');
-    setPrometheusSeverity('warning');
+    setAlertId(`es-${Date.now()}`);
+    setAlertName('');
+    setAlertMessage('');
+    setElasticsearchSeverity('warning');
+    setClusterName('prod-cluster');
+    setIndexName('backend-logs');
     setShowDemoForm(false);
   };
   
   return (
     <Container>
-      <Header>Frontend Alerts</Header>
+      <Header>Backend Alerts</Header>
       
       <ButtonGroup>
         <Button onClick={() => setShowDemoForm(!showDemoForm)}>
@@ -412,10 +410,10 @@ const FrontendAlerts: React.FC = () => {
             <Label>Alert Type</Label>
             <Select 
               value={alertType} 
-              onChange={(e) => setAlertType(e.target.value as 'internal' | 'prometheus')}
+              onChange={(e) => setAlertType(e.target.value as 'internal' | 'elasticsearch')}
             >
               <option value="internal">Internal Alert</option>
-              <option value="prometheus">Prometheus Alert</option>
+              <option value="elasticsearch">Elasticsearch Alert</option>
             </Select>
           </FormGroup>
           
@@ -460,10 +458,10 @@ const FrontendAlerts: React.FC = () => {
                   value={category} 
                   onChange={(e) => setCategory(e.target.value as AlertCategory)}
                 >
-                  <option value={AlertCategory.APPLICATION}>Application</option>
-                  <option value={AlertCategory.PERFORMANCE}>Performance</option>
-                  <option value={AlertCategory.SECURITY}>Security</option>
                   <option value={AlertCategory.SYSTEM}>System</option>
+                  <option value={AlertCategory.PERFORMANCE}>Performance</option>
+                  <option value={AlertCategory.APPLICATION}>Application</option>
+                  <option value={AlertCategory.DATABASE}>Database</option>
                 </Select>
               </FormGroup>
               
@@ -475,37 +473,27 @@ const FrontendAlerts: React.FC = () => {
                 <Label>Alert Name</Label>
                 <Input 
                   type="text" 
-                  value={alertname} 
-                  onChange={(e) => setAlertname(e.target.value)}
-                  placeholder="e.g., FrontendResponseTimeHigh"
+                  value={alertName} 
+                  onChange={(e) => setAlertName(e.target.value)}
+                  placeholder="e.g., High Error Rate"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>Instance</Label>
+                <Label>Message</Label>
                 <Input 
                   type="text" 
-                  value={instance} 
-                  onChange={(e) => setInstance(e.target.value)}
-                  placeholder="e.g., frontend-app-01"
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <Label>Job</Label>
-                <Input 
-                  type="text" 
-                  value={job} 
-                  onChange={(e) => setJob(e.target.value)}
-                  placeholder="e.g., frontend-monitoring"
+                  value={alertMessage} 
+                  onChange={(e) => setAlertMessage(e.target.value)}
+                  placeholder="Alert message"
                 />
               </FormGroup>
               
               <FormGroup>
                 <Label>Severity</Label>
                 <Select 
-                  value={prometheusSeverity} 
-                  onChange={(e) => setPrometheusSeverity(e.target.value)}
+                  value={elasticsearchSeverity} 
+                  onChange={(e) => setElasticsearchSeverity(e.target.value as 'info' | 'warning' | 'error' | 'critical')}
                 >
                   <option value="info">Info</option>
                   <option value="warning">Warning</option>
@@ -515,34 +503,34 @@ const FrontendAlerts: React.FC = () => {
               </FormGroup>
               
               <FormGroup>
-                <Label>Summary</Label>
+                <Label>Cluster</Label>
                 <Input 
                   type="text" 
-                  value={summary} 
-                  onChange={(e) => setSummary(e.target.value)}
-                  placeholder="Brief summary of the alert"
+                  value={clusterName} 
+                  onChange={(e) => setClusterName(e.target.value)}
+                  placeholder="e.g., prod-cluster"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>Description</Label>
+                <Label>Index</Label>
                 <Input 
                   type="text" 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Detailed description of the alert"
+                  value={indexName} 
+                  onChange={(e) => setIndexName(e.target.value)}
+                  placeholder="e.g., backend-logs"
                 />
               </FormGroup>
               
-              <Button onClick={handleAddPrometheusAlert}>Add Prometheus Alert</Button>
+              <Button onClick={handleAddElasticsearchAlert}>Add Elasticsearch Alert</Button>
             </>
           )}
         </AddAlertForm>
       )}
       
       <AlertsList>
-        {frontendAlerts.length > 0 ? (
-          frontendAlerts.map((alert: Alert) => (
+        {backendAlerts.length > 0 ? (
+          backendAlerts.map((alert: Alert) => (
             <AlertItem key={alert.id} severity={alert.severity} status={alert.status}>
               <AlertHeader>
                 <div>
@@ -604,8 +592,8 @@ const FrontendAlerts: React.FC = () => {
           ))
         ) : (
           <EmptyState>
-            <h3>No frontend alerts</h3>
-            <p>There are currently no alerts for the frontend module.</p>
+            <h3>No backend alerts</h3>
+            <p>There are currently no alerts for the backend module.</p>
           </EmptyState>
         )}
       </AlertsList>
@@ -613,4 +601,4 @@ const FrontendAlerts: React.FC = () => {
   );
 };
 
-export default FrontendAlerts;
+export default BackendAlerts;

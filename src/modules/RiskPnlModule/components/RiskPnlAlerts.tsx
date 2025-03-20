@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useAlertContext } from '../../core/AlertContext';
-import { useConnectorAlerts } from '../../hooks/useConnectorAlerts';
+import { useAlertContext } from '../../../core/AlertContext';
+import { useConnectorAlerts } from '../../../hooks/useConnectorAlerts';
 import { 
   Alert, 
   AlertSeverity, 
   AlertCategory, 
   AlertStatus,
-  NagiosAlert
-} from '../../types';
+  PrometheusAlert 
+} from '../../../types';
 
 const Container = styled.div`
   padding: 20px;
@@ -163,6 +163,8 @@ const CategoryBadge = styled.span<{ category: AlertCategory }>`
         return '#e8eaf6';
       case AlertCategory.DATABASE:
         return '#f3e5f5';
+      case AlertCategory.CUSTOM:
+        return '#fce4ec';
       default:
         return '#f5f5f5';
     }
@@ -181,6 +183,8 @@ const CategoryBadge = styled.span<{ category: AlertCategory }>`
         return '#1a237e';
       case AlertCategory.DATABASE:
         return '#4a148c';
+      case AlertCategory.CUSTOM:
+        return '#880e4f';
       default:
         return '#212121';
     }
@@ -294,9 +298,10 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
   margin-top: 20px;
+  margin-bottom: 20px;
 `;
 
-const ToolsAndJobsAlerts: React.FC = () => {
+const RiskPnlAlerts: React.FC = () => {
   const { 
     alerts, 
     addAlert, 
@@ -312,16 +317,16 @@ const ToolsAndJobsAlerts: React.FC = () => {
     // isLoading and error are not currently used but kept for future use
     refreshAlerts 
   } = useConnectorAlerts({
-    moduleId: 'toolsandjobs',
-    teamId: 'operations-team',
+    moduleId: 'riskpnl',
+    teamId: 'risk-team',
     refreshInterval: 30000 // 30 seconds
   });
   
-  const toolsAndJobsAlerts = alerts.filter(alert => alert.moduleId === 'toolsandjobs');
+  const riskPnlAlerts = alerts.filter(alert => alert.moduleId === 'riskpnl');
   
   // State for demo form
   const [showDemoForm, setShowDemoForm] = useState(false);
-  const [alertType, setAlertType] = useState<'internal' | 'nagios'>('internal');
+  const [alertType, setAlertType] = useState<'internal' | 'prometheus'>('internal');
   
   // Form state for internal alert
   const [title, setTitle] = useState('');
@@ -329,12 +334,13 @@ const ToolsAndJobsAlerts: React.FC = () => {
   const [severity, setSeverity] = useState<AlertSeverity>(AlertSeverity.INFO);
   const [category, setCategory] = useState<AlertCategory>(AlertCategory.SYSTEM);
   
-  // Form state for Nagios alert
-  const [hostName, setHostName] = useState('job-server');
-  const [serviceDescription, setServiceDescription] = useState('Scheduled Jobs');
-  const [state, setState] = useState<'OK' | 'WARNING' | 'CRITICAL' | 'UNKNOWN'>('WARNING');
-  const [output, setOutput] = useState('');
-  const [longOutput, setLongOutput] = useState('');
+  // Form state for Prometheus alert
+  const [alertname, setAlertname] = useState('');
+  const [instance, setInstance] = useState('risk-calculator-01');
+  const [job, setJob] = useState('risk-monitoring');
+  const [prometheusSeverity, setPrometheusSeverity] = useState('warning');
+  const [summary, setSummary] = useState('');
+  const [description, setDescription] = useState('');
   
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleString();
@@ -342,7 +348,7 @@ const ToolsAndJobsAlerts: React.FC = () => {
   
   const handleAddInternalAlert = () => {
     addAlert({
-      moduleId: 'toolsandjobs',
+      moduleId: 'riskpnl',
       title,
       message,
       severity,
@@ -359,32 +365,40 @@ const ToolsAndJobsAlerts: React.FC = () => {
     setShowDemoForm(false);
   };
   
-  const handleAddNagiosAlert = () => {
-    const nagiosAlert: NagiosAlert = {
-      source: 'nagios',
-      host_name: hostName,
-      service_description: serviceDescription,
-      state,
-      output,
-      long_output: longOutput,
-      timestamp: Math.floor(Date.now() / 1000), // Current time in seconds
-      attempt: Math.floor(Math.random() * 3) + 1
+  const handleAddPrometheusAlert = () => {
+    const prometheusAlert: PrometheusAlert = {
+      source: 'prometheus',
+      alertname,
+      instance,
+      job,
+      severity: prometheusSeverity,
+      summary,
+      description,
+      status: 'firing',
+      startsAt: new Date().toISOString(),
+      labels: {
+        alert_type: 'risk',
+        environment: 'production',
+        instance,
+        job
+      }
     };
     
-    addThirdPartyAlert(nagiosAlert, 'toolsandjobs');
+    addThirdPartyAlert(prometheusAlert, 'riskpnl');
     
     // Reset form
-    setHostName('job-server');
-    setServiceDescription('Scheduled Jobs');
-    setState('WARNING');
-    setOutput('');
-    setLongOutput('');
+    setAlertname('');
+    setSummary('');
+    setDescription('');
+    setInstance('risk-calculator-01');
+    setJob('risk-monitoring');
+    setPrometheusSeverity('warning');
     setShowDemoForm(false);
   };
   
   return (
     <Container>
-      <Header>Tools & Jobs Alerts</Header>
+      <Header>Risk & PnL Alerts</Header>
       
       <ButtonGroup>
         <Button onClick={() => setShowDemoForm(!showDemoForm)}>
@@ -403,10 +417,10 @@ const ToolsAndJobsAlerts: React.FC = () => {
             <Label>Alert Type</Label>
             <Select 
               value={alertType} 
-              onChange={(e) => setAlertType(e.target.value as 'internal' | 'nagios')}
+              onChange={(e) => setAlertType(e.target.value as 'internal' | 'prometheus')}
             >
               <option value="internal">Internal Alert</option>
-              <option value="nagios">Nagios Alert</option>
+              <option value="prometheus">Prometheus Alert</option>
             </Select>
           </FormGroup>
           
@@ -453,8 +467,8 @@ const ToolsAndJobsAlerts: React.FC = () => {
                 >
                   <option value={AlertCategory.SYSTEM}>System</option>
                   <option value={AlertCategory.PERFORMANCE}>Performance</option>
-                  <option value={AlertCategory.APPLICATION}>Application</option>
                   <option value={AlertCategory.SECURITY}>Security</option>
+                  <option value={AlertCategory.CUSTOM}>Custom</option>
                 </Select>
               </FormGroup>
               
@@ -463,67 +477,77 @@ const ToolsAndJobsAlerts: React.FC = () => {
           ) : (
             <>
               <FormGroup>
-                <Label>Host Name</Label>
+                <Label>Alert Name</Label>
                 <Input 
                   type="text" 
-                  value={hostName} 
-                  onChange={(e) => setHostName(e.target.value)}
-                  placeholder="e.g., job-server"
+                  value={alertname} 
+                  onChange={(e) => setAlertname(e.target.value)}
+                  placeholder="e.g., RiskThresholdExceeded"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>Service Description</Label>
+                <Label>Instance</Label>
                 <Input 
                   type="text" 
-                  value={serviceDescription} 
-                  onChange={(e) => setServiceDescription(e.target.value)}
-                  placeholder="e.g., Scheduled Jobs"
+                  value={instance} 
+                  onChange={(e) => setInstance(e.target.value)}
+                  placeholder="e.g., risk-calculator-01"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>State</Label>
+                <Label>Job</Label>
+                <Input 
+                  type="text" 
+                  value={job} 
+                  onChange={(e) => setJob(e.target.value)}
+                  placeholder="e.g., risk-monitoring"
+                />
+              </FormGroup>
+              
+              <FormGroup>
+                <Label>Severity</Label>
                 <Select 
-                  value={state} 
-                  onChange={(e) => setState(e.target.value as 'OK' | 'WARNING' | 'CRITICAL' | 'UNKNOWN')}
+                  value={prometheusSeverity} 
+                  onChange={(e) => setPrometheusSeverity(e.target.value)}
                 >
-                  <option value="OK">OK</option>
-                  <option value="WARNING">Warning</option>
-                  <option value="CRITICAL">Critical</option>
-                  <option value="UNKNOWN">Unknown</option>
+                  <option value="info">Info</option>
+                  <option value="warning">Warning</option>
+                  <option value="error">Error</option>
+                  <option value="critical">Critical</option>
                 </Select>
               </FormGroup>
               
               <FormGroup>
-                <Label>Output</Label>
+                <Label>Summary</Label>
                 <Input 
                   type="text" 
-                  value={output} 
-                  onChange={(e) => setOutput(e.target.value)}
-                  placeholder="Alert output message"
+                  value={summary} 
+                  onChange={(e) => setSummary(e.target.value)}
+                  placeholder="Brief summary of the alert"
                 />
               </FormGroup>
               
               <FormGroup>
-                <Label>Long Output (Optional)</Label>
+                <Label>Description</Label>
                 <Input 
                   type="text" 
-                  value={longOutput} 
-                  onChange={(e) => setLongOutput(e.target.value)}
-                  placeholder="Detailed alert information"
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Detailed description of the alert"
                 />
               </FormGroup>
               
-              <Button onClick={handleAddNagiosAlert}>Add Nagios Alert</Button>
+              <Button onClick={handleAddPrometheusAlert}>Add Prometheus Alert</Button>
             </>
           )}
         </AddAlertForm>
       )}
       
       <AlertsList>
-        {toolsAndJobsAlerts.length > 0 ? (
-          toolsAndJobsAlerts.map((alert: Alert) => (
+        {riskPnlAlerts.length > 0 ? (
+          riskPnlAlerts.map((alert: Alert) => (
             <AlertItem key={alert.id} severity={alert.severity} status={alert.status}>
               <AlertHeader>
                 <div>
@@ -585,8 +609,8 @@ const ToolsAndJobsAlerts: React.FC = () => {
           ))
         ) : (
           <EmptyState>
-            <h3>No tools & jobs alerts</h3>
-            <p>There are currently no alerts for the tools & jobs module.</p>
+            <h3>No risk & PnL alerts</h3>
+            <p>There are currently no alerts for the risk & PnL module.</p>
           </EmptyState>
         )}
       </AlertsList>
@@ -594,4 +618,4 @@ const ToolsAndJobsAlerts: React.FC = () => {
   );
 };
 
-export default ToolsAndJobsAlerts;
+export default RiskPnlAlerts;

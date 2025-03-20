@@ -1,7 +1,7 @@
 import { ModuleDefinition } from '../../types';
-import RiskPnlDashboard from './RiskPnlDashboard';
-import RiskPnlSettings from './RiskPnlSettings';
-import RiskPnlAlerts from './RiskPnlAlerts';
+import DashboardPage from './pages/DashboardPage';
+import AlertsPage from './pages/AlertsPage';
+import SettingsPage from './pages/SettingsPage';
 
 // This is the main export of the module
 const RiskPnlModule: ModuleDefinition = {
@@ -28,7 +28,7 @@ const RiskPnlModule: ModuleDefinition = {
       icon: '⚙️'
     }
   ],
-  component: RiskPnlDashboard,
+  component: DashboardPage,
   alertsEnabled: true
 };
 
@@ -38,14 +38,14 @@ export default RiskPnlModule;
 export const routes = [
   {
     path: '/riskpnl',
-    component: RiskPnlDashboard
+    component: DashboardPage
   },
   {
     path: '/riskpnl/alerts',
-    component: RiskPnlAlerts
+    component: AlertsPage
   },
   {
     path: '/riskpnl/settings',
-    component: RiskPnlSettings
+    component: SettingsPage
   }
 ];

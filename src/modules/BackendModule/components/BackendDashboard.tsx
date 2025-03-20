@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useAlertContext } from '../../core/AlertContext';
-import { AlertSeverity, AlertCategory } from '../../types';
+import { useAlertContext } from '../../../core/AlertContext';
+import { AlertSeverity, AlertCategory } from '../../../types';
 
 const Container = styled.div`
   padding: 20px;
