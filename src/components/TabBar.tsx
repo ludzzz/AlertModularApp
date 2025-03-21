@@ -11,7 +11,7 @@ const TabContainer = styled.div`
   height: 50px;
 `;
 
-const Tab = styled.div<{ active: boolean }>`
+const Tab = styled.div.attrs({ role: 'button' })<{ active: boolean }>`
   padding: 0 20px;
   height: 100%;
   display: flex;
@@ -43,7 +43,7 @@ const TabContent = styled.div`
   gap: 10px;
 `;
 
-const AlertToggle = styled.label`
+const AlertToggle = styled.div`
   display: flex;
   align-items: center;
   font-size: 0.8rem;
@@ -51,8 +51,55 @@ const AlertToggle = styled.label`
   color: #666;
 `;
 
-const ToggleInput = styled.input`
+const ToggleSwitch = styled.div`
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
   margin-right: 5px;
+`;
+
+const SwitchInput = styled.input`
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+
+  &:checked + span {
+    background-color: #4CAF50;
+  }
+
+  &:checked + span:before {
+    transform: translateX(16px);
+  }
+  
+  &:focus + span {
+    box-shadow: 0 0 1px #4CAF50;
+  }
+`;
+
+const SwitchSlider = styled.span`
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 20px;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+  }
 `;
 
 interface TabBarProps {
@@ -83,12 +130,19 @@ const TabBar: React.FC<TabBarProps> = ({ onTabChange }) => {
             <span>{module.name}</span>
             {module.id !== 'core' && (
               <AlertToggle onClick={(e) => e.stopPropagation()}>
-                <ToggleInput 
-                  type="checkbox" 
-                  checked={module.alertsEnabled}
-                  onChange={(e) => handleToggleAlerts(e, module.id)} 
-                />
-                Alerts
+                <ToggleSwitch onClick={(e) => e.stopPropagation()}>
+                  <SwitchInput 
+                    type="checkbox" 
+                    checked={module.alertsEnabled}
+                    onChange={(e) => handleToggleAlerts(e, module.id)} 
+                  />
+                  <SwitchSlider onClick={(e) => {
+                    e.stopPropagation();
+                    // Manual toggle since the click is on the slider, not the input
+                    toggleModuleAlerts(module.id, !module.alertsEnabled);
+                  }} />
+                </ToggleSwitch>
+                <span onClick={(e) => e.stopPropagation()}>Alerts</span>
               </AlertToggle>
             )}
           </TabContent>

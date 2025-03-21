@@ -107,19 +107,25 @@ const ToggleSwitch = styled.div`
   display: inline-block;
   width: 60px;
   height: 34px;
+  margin-right: 8px;
 `;
 
 const SwitchInput = styled.input`
   opacity: 0;
   width: 0;
   height: 0;
+  position: absolute;
 
   &:checked + span {
-    background-color: #2196f3;
+    background-color: #4CAF50;
   }
 
   &:checked + span:before {
     transform: translateX(26px);
+  }
+  
+  &:focus + span {
+    box-shadow: 0 0 1px #4CAF50;
   }
 `;
 
@@ -325,7 +331,10 @@ const ConnectorSettings: React.FC<ConnectorSettingsProps> = ({ onSave }) => {
                     checked={connector.enabled} 
                     onChange={() => toggleConnector(connector.id, !connector.enabled)} 
                   />
-                  <SwitchSlider />
+                  <SwitchSlider onClick={(e) => {
+                    e.stopPropagation();
+                    toggleConnector(connector.id, !connector.enabled);
+                  }} />
                 </ToggleSwitch>
                 <Button onClick={() => testConnection(connector)}>Test</Button>
                 <Button onClick={() => startEdit(connector)}>Edit</Button>
@@ -427,14 +436,23 @@ const ConnectorSettings: React.FC<ConnectorSettingsProps> = ({ onSave }) => {
             </FormGroup>
             
             <FormGroup>
-              <Label>
-                <Checkbox
-                  type="checkbox"
-                  name="enabled"
-                  checked={formState.enabled}
-                  onChange={handleInputChange}
-                />
-                Enabled
+              <Label style={{ display: 'flex', alignItems: 'center' }}>
+                <ToggleSwitch>
+                  <SwitchInput
+                    type="checkbox"
+                    name="enabled"
+                    checked={formState.enabled}
+                    onChange={handleInputChange}
+                  />
+                  <SwitchSlider onClick={(e) => {
+                    e.stopPropagation();
+                    setFormState(prev => ({
+                      ...prev,
+                      enabled: !prev.enabled
+                    }));
+                  }} />
+                </ToggleSwitch>
+                <span style={{ marginLeft: '8px' }}>Enabled</span>
               </Label>
             </FormGroup>
             
@@ -450,10 +468,5 @@ const ConnectorSettings: React.FC<ConnectorSettingsProps> = ({ onSave }) => {
     </SettingsContainer>
   );
 };
-
-// Additional styled component for checkbox
-const Checkbox = styled.input`
-  margin-right: 10px;
-`;
 
 export default ConnectorSettings;
