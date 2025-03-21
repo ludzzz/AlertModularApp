@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useCoreContext } from '../core/CoreContext';
+import { useAlertContext } from '../core/AlertContext';
 import { ModuleDefinition } from '../types';
 
 const TabContainer = styled.div`
@@ -102,6 +103,58 @@ const SwitchSlider = styled.span`
   }
 `;
 
+// Alert summary components
+const AlertSummaryContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+`;
+
+const AlertCounter = styled.div<{ severity: string }>`
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  background-color: ${props => {
+    switch (props.severity) {
+      case 'critical': return '#d9534f'; // Red
+      case 'error': return '#f0ad4e';    // Orange
+      default: return '#6c757d';         // Gray
+    }
+  }};
+`;
+
+interface AlertSummaryProps {
+  moduleId: string;
+  onClick?: (e: React.MouseEvent) => void;
+}
+
+const AlertSummary: React.FC<AlertSummaryProps> = ({ moduleId, onClick }) => {
+  const { getAlertsByModule } = useAlertContext();
+  
+  // Get all alerts for this module
+  const moduleAlerts = getAlertsByModule(moduleId);
+  
+  // Count only critical and error alerts
+  const criticalCount = moduleAlerts.filter(alert => alert.severity === 'critical' && alert.status === 'active').length;
+  const errorCount = moduleAlerts.filter(alert => alert.severity === 'error' && alert.status === 'active').length;
+  
+  // Format count for display (ensuring it fits in the box)
+  const formatCount = (count: number) => count > 999 ? '999+' : count.toString();
+  
+  return (
+    <AlertSummaryContainer onClick={onClick}>
+      <AlertCounter severity="critical">{formatCount(criticalCount)}</AlertCounter>
+      <AlertCounter severity="error">{formatCount(errorCount)}</AlertCounter>
+    </AlertSummaryContainer>
+  );
+};
+
 interface TabBarProps {
   onTabChange: (moduleId: string) => void;
 }
@@ -142,7 +195,7 @@ const TabBar: React.FC<TabBarProps> = ({ onTabChange }) => {
                     toggleModuleAlerts(module.id, !module.alertsEnabled);
                   }} />
                 </ToggleSwitch>
-                <span onClick={(e) => e.stopPropagation()}>Alerts</span>
+                <AlertSummary moduleId={module.id} onClick={(e) => e.stopPropagation()} />
               </AlertToggle>
             )}
           </TabContent>

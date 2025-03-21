@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import TabBar from '../components/TabBar';
 import { CoreContextProvider, useCoreContext } from '../core/CoreContext';
+import { AlertContextProvider } from '../core/AlertContext';
 import { ModuleDefinition } from '../types';
 
 // Mock module to test with
@@ -31,11 +32,13 @@ const TabBarTestWrapper = ({ onTabChange }: { onTabChange: (moduleId: string) =>
 describe('TabBar Component', () => {
   const mockTabChange = jest.fn();
   
-  it('renders modules with toggle switches', () => {
+  it('renders modules with toggle switches and alert summary', () => {
     render(
-      <CoreContextProvider>
-        <TabBarTestWrapper onTabChange={mockTabChange} />
-      </CoreContextProvider>
+      <AlertContextProvider>
+        <CoreContextProvider>
+          <TabBarTestWrapper onTabChange={mockTabChange} />
+        </CoreContextProvider>
+      </AlertContextProvider>
     );
     
     // Check if the module name is displayed
@@ -45,13 +48,19 @@ describe('TabBar Component', () => {
     const toggleSwitch = screen.getByRole('checkbox');
     expect(toggleSwitch).toBeInTheDocument();
     expect(toggleSwitch).toBeChecked();
+    
+    // Check if alert summary counters are displayed (all showing 0)
+    const counters = screen.getAllByText('0');
+    expect(counters.length).toBe(2); // Only critical and error severity levels
   });
   
   it('handles tab change when clicked', () => {
     render(
-      <CoreContextProvider>
-        <TabBarTestWrapper onTabChange={mockTabChange} />
-      </CoreContextProvider>
+      <AlertContextProvider>
+        <CoreContextProvider>
+          <TabBarTestWrapper onTabChange={mockTabChange} />
+        </CoreContextProvider>
+      </AlertContextProvider>
     );
     
     // Click on the tab
@@ -65,9 +74,11 @@ describe('TabBar Component', () => {
   
   it('toggles alerts when switch is clicked', () => {
     render(
-      <CoreContextProvider>
-        <TabBarTestWrapper onTabChange={mockTabChange} />
-      </CoreContextProvider>
+      <AlertContextProvider>
+        <CoreContextProvider>
+          <TabBarTestWrapper onTabChange={mockTabChange} />
+        </CoreContextProvider>
+      </AlertContextProvider>
     );
     
     // Get the toggle switch input
@@ -83,9 +94,11 @@ describe('TabBar Component', () => {
   
   it('toggles alerts when switch slider is clicked', () => {
     render(
-      <CoreContextProvider>
-        <TabBarTestWrapper onTabChange={mockTabChange} />
-      </CoreContextProvider>
+      <AlertContextProvider>
+        <CoreContextProvider>
+          <TabBarTestWrapper onTabChange={mockTabChange} />
+        </CoreContextProvider>
+      </AlertContextProvider>
     );
     
     // Get the toggle switch input and slider
