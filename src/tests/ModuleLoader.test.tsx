@@ -90,6 +90,18 @@ jest.mock('../modules/ToolsAndJobsModule', () => ({
   routes: []
 }));
 
+jest.mock('../modules/ResearchDataModule', () => ({
+  __esModule: true,
+  default: {
+    id: 'research-data',
+    name: 'Research & Data',
+    menuItems: [],
+    component: () => null,
+    alertsEnabled: true
+  },
+  routes: []
+}));
+
 // Mock CoreModule
 jest.mock('../core/CoreModule', () => () => <div>CoreModule</div>);
 
@@ -110,11 +122,11 @@ describe('ModuleLoader', () => {
   test('registers modules only once on mount', () => {
     render(<ModuleLoader />);
     
-    // Check that register was called 5 times (for core and 4 modules)
-    expect(mockRegisterModule).toHaveBeenCalledTimes(5);
+    // Check that register was called 6 times (for core and 5 modules)
+    expect(mockRegisterModule).toHaveBeenCalledTimes(6);
     
-    // Check that alerts were added only for non-core modules (4 times)
-    expect(mockAddAlert).toHaveBeenCalledTimes(4);
+    // Check that alerts were added only for non-core modules (5 times)
+    expect(mockAddAlert).toHaveBeenCalledTimes(5);
   });
 
   test('does not re-register modules on re-render', () => {

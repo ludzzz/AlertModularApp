@@ -14,6 +14,7 @@ import FrontendModule, { routes as frontendRoutes } from '../modules/FrontendMod
 import RiskPnlModule, { routes as riskPnlRoutes } from '../modules/RiskPnlModule';
 import BackendModule, { routes as backendRoutes } from '../modules/BackendModule';
 import ToolsAndJobsModule, { routes as toolsAndJobsRoutes } from '../modules/ToolsAndJobsModule';
+import ResearchDataModule, { routes as researchDataRoutes } from '../modules/ResearchDataModule';
 
 // Add module loaded tracking to window to persist across StrictMode remounts
 declare global {
@@ -78,6 +79,7 @@ const ModuleLoader: React.FC = () => {
     loadModule(RiskPnlModule);
     loadModule(BackendModule);
     loadModule(ToolsAndJobsModule);
+    loadModule(ResearchDataModule);
     
     // No cleanup needed - we want the loaded state to persist
     // across StrictMode unmounts/remounts
@@ -144,6 +146,19 @@ const ModuleLoader: React.FC = () => {
           path={route.path} 
           element={
             <ModuleErrorBoundary moduleId="toolsandjobs" moduleName="Tools & Jobs">
+              <route.component />
+            </ModuleErrorBoundary>
+          } 
+        />
+      ))}
+      
+      {/* Research & Data module routes */}
+      {researchDataRoutes.map(route => (
+        <Route 
+          key={route.path} 
+          path={route.path} 
+          element={
+            <ModuleErrorBoundary moduleId="research-data" moduleName="Research & Data">
               <route.component />
             </ModuleErrorBoundary>
           } 
